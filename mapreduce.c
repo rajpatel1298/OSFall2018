@@ -40,18 +40,19 @@ int main(int argc, char ** argv){
     infile = argv[10];
     outfile = argv[12];
 
-    int fd = open(infile, O_RDONLY);
-    if(fd == -1){
-        printf("Error: %d\n", errno);
-        exit(1);
-    }
+    FILE *f = fopen(infile, "rb");
+    fseek(f, 0, SEEK_END);
+    long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);
 
-    char fileBuf[1000000];
-    while( read(fd,fileBuf,100) != 0){
-       
-    }
-    printf("%s\n", fileBuf);
+    char * buffer = malloc(fsize+1); //error check
+    fread(buffer,fsize,1,f); //error check
+    fclose(f);
 
-    close(fd);
+    buffer[fsize] = 0;
+
+
+    printf("%s\n", buffer);
+
     return 0;
 }
