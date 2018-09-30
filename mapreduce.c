@@ -86,13 +86,14 @@ void writeToSharedMem(void* shareMem, struct pair * pairArr, int threadID){
 	int i = 0;
 
 	while(1){
-		
+
 		memcpy(shareMem + y + x, &(pairArr[i]), sizeof(struct pair));
 		
 		y+= sizeof(struct pair);	//incr the next position in the pair array store in share memory
 
 		if(pairArr[i].value == -1)	//marks the end of the pair array
 		{
+
 			break;
 		}
 
@@ -406,6 +407,9 @@ void sortPairArr(void* shareMem, int threadID)
 
            j = j-1;
        }
+
+	   
+	   		       
        pairArr[j+1].key = key;
        pairArr[j+1].value = value;
    }
@@ -425,18 +429,24 @@ void * map_sort(void * threadArg){
     int i;
     int start = 0, end = 0, totalNumbers = 0, pairPos = 0;
     int keyPos = 0;
+    int rule = 0;
     for(i = 0; i < strlen(buffer); i++){
         if(buffer[i] >= '0' && buffer[i] <= '9'){
+        	rule = 0;
             continue;
         }
         else {
+        	if(rule == 1){
+        		continue;
+        	}
+        	rule = 1;        	
             totalNumbers++;
         }
     }
 
     struct pair* pairArr = (struct pair *)malloc( (totalNumbers+1) * sizeof(struct pair));
     char * key;
-
+	printf("total numbers: %d\n", totalNumbers);
     while(start < strlen(buffer)){
         if(buffer[start] >= '0' && buffer[start] <= '9'){
             start++;
@@ -464,22 +474,28 @@ void * map_sort(void * threadArg){
             //add key and value to pairArr
             pairArr[pairPos].value = value;
             pairArr[pairPos].key = key;
+            
             pairPos++;
 
             //move start and end to next token
            // if(start+1 < strlen(buffer)) {
-                end = start+1;
+           	//	printf("This is the old start: '%c'\n", buffer[start]);
+                end = start+2;
                 start = end;
+          //      printf("This is the new start: '%c'\n", buffer[start]);
            // }
         }
     }
     //need to save last number somehow
     pairArr[totalNumbers].key = "end";
     pairArr[totalNumbers].value = -1;
-    printPairArr(pairArr);
-
+    
+    
+//    printPairArr(pairArr);
+    
     writeToSharedMem(shmem, pairArr,threadID);
-    pthread_barrier_wait(&map_barrier);
+    pthread_barrier_wait(&map_barrier);    
+
     return NULL;
 }
 
@@ -579,6 +595,7 @@ int main(int argc, char ** argv){
            prev = delimArr[i+1]+1;
            (*arg).partialBuffer = buffSplit;
            if(strcmp(app,"sort") == 0){
+//           	  printf("THIS IS THE ARG PARTIALBUFF: \n%s\n", (*arg).partialBuffer);
               pthread_create(&map_threads[i], NULL, map_sort, (void*)arg);
            }  
         }
@@ -591,9 +608,9 @@ int main(int argc, char ** argv){
             sortPairArr(shmem, i);
         }
         mergeShareMem(shmem,num_maps);
-       // writeBackOrganize(shmem, num_maps);
+//        writeBackOrganize(shmem, num_maps);
        
-      //  printContentsShareMem(0,shmem);
+        printContentsShareMem(0,shmem);
     }
     return 0;
 }
