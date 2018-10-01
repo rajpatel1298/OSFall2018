@@ -419,6 +419,110 @@ void sortPairArr(void* shareMem, int threadID)
 
 }
 
+int isNotDelim(char c){
+	if(c != ' ' && c != '.' && c != ',' && c != ';' && c != ':' && c != '!' && c != '-' && c != '\n' && c != '\r'){
+		return 1;
+	}
+	return 0;
+}
+
+void * map_wordcount(void * threadArg){
+	struct threadInput * input = (struct threadInput *)threadArg;
+	char * buffer = (*input).partialBuffer;
+	void * shmem = (*input).shareMem;
+	int threadID = (*input).threadID;
+	int i;
+	int start = 0, end = 0, totalWords = 0, pairPos = 0;
+	int keyPos = 0;
+	int rule = 0;
+	
+	for(i = 0; i < strlen(buffer); i++){
+
+        if(isNotDelim(buffer[i]) == 1){
+
+        	rule = 0;
+            continue;
+        }
+        else {
+        	if(rule == 1){
+        		continue;
+        	}
+        	rule = 1;        	
+            totalWords++;
+    
+        }
+    }
+    struct pair* pairArr = (struct pair *)malloc( (totalWords+1) * sizeof(struct pair));
+    char * key;
+	printf("total words: %d\n", totalWords);
+
+    while(start < strlen(buffer)){
+        if(isNotDelim(buffer[start]) == 1){
+            start++;
+        }
+        else {
+            key = malloc(start-end+1);
+            for(i = end; i < start; i++){ //copy current string into key
+                if(buffer[i] <= 90 && buffer[i] >= 65){
+               		key[keyPos] = buffer[i] + 32;
+               		keyPos++;
+            	}else{
+               		key[keyPos] = buffer[i];
+                	keyPos++;
+                }	
+              
+            }
+            keyPos = 0; //reset keyPos for next key
+            key[start-end] = '\0';
+
+            //add key and value to pairArr
+            pairArr[pairPos].value = 1;
+            pairArr[pairPos].key = key;
+            
+            pairPos++;
+            
+            while(isNotDelim(buffer[start]) == 0){
+            	start++;
+            }
+            end = start;
+            start = end;
+    	}
+    }
+    
+    if(isNotDelim(buffer[start -1]) == 1){
+    	key = malloc(start-end+1);
+        for(i = end; i < start; i++){ //copy current string into key
+        	if(buffer[i] <= 90 && buffer[i] >= 65){
+               		key[keyPos] = buffer[i] + 32;
+               		keyPos++;
+            }else{
+          		key[keyPos] = buffer[i];
+            	keyPos++;
+            }	
+        }
+        keyPos = 0; //reset keyPos for next key
+        key[start-end] = '\0';
+
+            //add key and value to pairArr
+        pairArr[pairPos].value = 1;
+        pairArr[pairPos].key = key;
+            
+        pairPos++;
+    }
+    
+    pairArr[totalWords].key = "end";
+    pairArr[totalWords].value = -1;
+    
+
+//    printPairArr(pairArr);
+    
+    writeToSharedMem(shmem, pairArr,threadID);
+    pthread_barrier_wait(&map_barrier);   
+    
+    return NULL;
+}
+
+
 void * map_sort(void * threadArg){
     struct threadInput * input  = (struct threadInput *)threadArg;
    // printf("Thread: %d got here\n", (*input).threadID);
@@ -430,7 +534,9 @@ void * map_sort(void * threadArg){
     int start = 0, end = 0, totalNumbers = 0, pairPos = 0;
     int keyPos = 0;
     int rule = 0;
+    
     for(i = 0; i < strlen(buffer); i++){
+
         if(buffer[i] >= '0' && buffer[i] <= '9'){
         	rule = 0;
             continue;
@@ -443,7 +549,6 @@ void * map_sort(void * threadArg){
             totalNumbers++;
         }
     }
-
     struct pair* pairArr = (struct pair *)malloc( (totalNumbers+1) * sizeof(struct pair));
     char * key;
 	printf("total numbers: %d\n", totalNumbers);
@@ -491,7 +596,7 @@ void * map_sort(void * threadArg){
     pairArr[totalNumbers].value = -1;
     
     
-//    printPairArr(pairArr);
+    printPairArr(pairArr);
     
     writeToSharedMem(shmem, pairArr,threadID);
     pthread_barrier_wait(&map_barrier);    
@@ -547,7 +652,6 @@ int main(int argc, char ** argv){
     
     //loop through buffer and splits into num_maps -1, then the last thread will handle the rest
     // if nummaps == 1 no need for delim
-    
     int position;
     int delimPos = 1;
     delimArr[0] = -1;
@@ -561,12 +665,19 @@ int main(int argc, char ** argv){
     	for(i = 0; i < num_maps; i++){
     		if(i == num_maps - 1){ //this is created for the last iteration of the loop
     			delimArr[delimPos] = fsize - 1;
+
     			break;
     		}
     		position = ((i+1) * size) - 1; //gets the position at the (i+1)th thread    	
-    		while(buffer[position] != '\n'){
-    			position--;
-    		}
+    		if(strcmp(app,"sort") == 0){
+    			while(buffer[position] != '\n'){
+    				position--;
+    			}
+    		}else{
+    			while(buffer[position] != ' ' && buffer[position] != '.' && buffer[position] != ',' && buffer[position] != ';' && buffer[position] != ':' && buffer[position] != '!' && buffer[position] != '-'){
+    				position--;
+    			}
+    		}	
 //    		printf("At position %d is this char %c\n", position, buffer[position]);
     		delimArr[delimPos] = position;
     		delimPos++;	
@@ -574,7 +685,6 @@ int main(int argc, char ** argv){
     }
 
     void* shmem = create_shared_memory((size_t)SHMEM_SIZE);
-
     if(strcmp(impl,"threads") == 0){
 
         int pos;
@@ -586,17 +696,22 @@ int main(int argc, char ** argv){
            arg = malloc(sizeof(struct threadInput));
            (*arg).threadID = i;
            (*arg).shareMem = shmem;
-           buffSplit = (char*) malloc(delimArr[i+1]-prev+1);
+           buffSplit = (char*) malloc(delimArr[i+1]-prev+1+1);
            pos = 0;
-           for(j = prev; j < delimArr[i+1]; j++){
+           for(j = prev; j <= delimArr[i+1]; j++){
               buffSplit[pos] = buffer[j];
               pos++;
            }
-           prev = delimArr[i+1]+1;
+           
+           prev = delimArr[i+1]+1;        	
+           
            (*arg).partialBuffer = buffSplit;
            if(strcmp(app,"sort") == 0){
-//           	  printf("THIS IS THE ARG PARTIALBUFF: \n%s\n", (*arg).partialBuffer);
+          // 	  printf("-------////set of numbders/////--------: \n%s\n",buffSplit);
               pthread_create(&map_threads[i], NULL, map_sort, (void*)arg);
+           }else{
+          // 	  printf("----------////Set of words////----------------: \n%s\n", buffSplit);
+           	  pthread_create(&map_threads[i], NULL, map_wordcount, (void*)arg);
            }  
         }
         pthread_barrier_wait(&map_barrier);
@@ -608,9 +723,10 @@ int main(int argc, char ** argv){
             sortPairArr(shmem, i);
         }
         mergeShareMem(shmem,num_maps);
-//        writeBackOrganize(shmem, num_maps);
+        writeBackOrganize(shmem, num_maps);
        
         printContentsShareMem(0,shmem);
+                printContentsShareMem(1,shmem);
     }
     return 0;
 }
