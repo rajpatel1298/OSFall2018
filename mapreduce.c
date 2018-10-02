@@ -62,6 +62,23 @@ void printPairArr( struct pair* pairArr ){
 
 }
 
+char * convertIntForStrcmp(char * target, int numOfBytes){
+    char * final = (char*)malloc(numOfBytes * sizeof(char));
+    int size = (int) strlen(target);
+    int i,j;
+
+    for(i = 0; i < numOfBytes; i++){
+        final[i] = '0';
+    }
+
+    for(i = size-1, j = numOfBytes - 2; i >= 0; i--, j--){
+        final[j] = target[i];
+    }
+
+    final[numOfBytes - 1] = '\0';
+    return final;
+}
+
 void* create_shared_memory(size_t size) {
   // Our memory buffer will be readable and writable:
   int protection = PROT_READ | PROT_WRITE;
@@ -530,6 +547,7 @@ void * map_sort(void * threadArg){
     char * buffer = (*input).partialBuffer;
     void * shmem = (*input).shareMem;
     int threadID = (*input).threadID;
+    int maxBytes = 0;
     int i;
     int start = 0, end = 0, totalNumbers = 0, pairPos = 0;
     int keyPos = 0;
@@ -565,30 +583,15 @@ void * map_sort(void * threadArg){
             keyPos = 0; //reset keyPos for next key
             key[start-end] = '\0';
             int value = atoi(key);
-            //modify key to contain the correct ASCII values so that strcmp will work
-            for(i = 0; i < strlen(key); i++){
-                /*
-                char * ptr = malloc(1);
-                ptr[0] = key[i];
-                int place = atoi(ptr);
-                key[i] = (char)place;
-                free(ptr);
-                */
-                key[i] = key[i] - '0';
+            if(strlen(key) > maxBytes){
+                maxBytes = strlen(key);
             }
-            //add key and value to pairArr
             pairArr[pairPos].value = value;
             pairArr[pairPos].key = key;
             
             pairPos++;
-
-            //move start and end to next token
-           // if(start+1 < strlen(buffer)) {
-           	//	printf("This is the old start: '%c'\n", buffer[start]);
-                end = start+2;
-                start = end;
-          //      printf("This is the new start: '%c'\n", buffer[start]);
-           // }
+            end = start+2;
+            start = end;
         }
     }
     //need to save last number somehow
@@ -596,6 +599,13 @@ void * map_sort(void * threadArg){
     pairArr[totalNumbers].value = -1;
     
     
+    //update keys so that they work for strcmp
+    for(i = 0; i < totalNumbers; i++){
+        char * newKey = convertIntForStrcmp(pairArr[i].key, maxBytes);
+        pairArr[i].key = newKey;
+    }
+    
+
     printPairArr(pairArr);
     
     writeToSharedMem(shmem, pairArr,threadID);
@@ -796,12 +806,12 @@ int main(int argc, char ** argv){
            }
            
        	}
-        
+  /*      
         for(i = 0; i < num_reduces; i++){
             pthread_join(reduce_threads[i], NULL); 
            
         }   
-       	
+  */   	
         printContentsShareMem(0,shmem);
         printContentsShareMem(1,shmem);
     }
