@@ -608,36 +608,42 @@ void * reduce_wc(void * threadArg){
     struct threadInput * input  = (struct threadInput *)threadArg;
     void * shmem = (*input).shareMem;
     int threadID = (*input).threadID;
-
+	printf("we in threadID: %d\n", threadID);
     //for the case that the number of maps = the number of reduces
-    int i;
+    int i = 0;
     int numDiffWords = 1;
-    printf("%d\n", numDiffWords);
+
     struct pair * shmemBlock = getCopyOfPairArr(shmem, threadID);
 
-    size_t numPairs = sizeof(shmemBlock) / sizeof(shmemBlock[0]);
-    char * currentKey = shmemBlock[0].key;
-    //determine how many different words there are 
-    for(i = 0; i < numPairs; i++){
-       if(strcmp(currentKey, shmemBlock[i].key) == 0){
+	char * currentKey = shmemBlock[0].key;
+	while(1){
+
+		if(strcmp(currentKey, shmemBlock[i].key) == 0){
+			i++;
+
             continue;
-       }
-       else {
-            numDiffWords++;
-            currentKey = shmemBlock[i].key;
-       }
-    }
-    printf("%d\n", numDiffWords);
+        }else{
+
+        	if(shmemBlock[i].value == -1){
+        		break;
+        	}
+        	numDiffWords++;
+        	currentKey = shmemBlock[i].key;
+        	i++;
+        }    
+	
+	}
+
     //new pair array with the correct size malloc'd
     struct pair* newPairArr = (struct pair *)malloc( (numDiffWords+1) * sizeof(struct pair));
     int pos1 = 0, pos2 = 0;
-printf("%d\n", numDiffWords);
+
     for(i = 0; i < numDiffWords; i++){
 
         newPairArr[pos1].key = shmemBlock[pos2].key;
         newPairArr[pos1].value = 0;
         currentKey = shmemBlock[pos2].key;
-        while( strcmp(currentKey, shmemBlock[pos2].key) != 0 ){
+        while( strcmp(currentKey, shmemBlock[pos2].key) == 0 ){
             newPairArr[pos1].value += 1;
             pos2++;
         }
@@ -648,8 +654,9 @@ printf("%d\n", numDiffWords);
     //add last pair struct
     newPairArr[numDiffWords].key = "end";
     newPairArr[numDiffWords].value = -1;
-
+	
     writeToSharedMem(shmem, newPairArr, threadID);
+	printf(":gsag\n");
     return NULL;
 }
 
@@ -784,14 +791,19 @@ int main(int argc, char ** argv){
            if(strcmp(app,"sort") == 0){
     //          pthread_create(&reduce_threads[i], NULL, reduce_sort, (void*)arg);
            }else{
-           	  pthread_create(&map_threads[i], NULL, reduce_wc, (void*)arg);
+           printf("num reduc: %d\n", num_reduces);
+           	  printf("pthread: %d\n",pthread_create(&reduce_threads[i], NULL, reduce_wc, (void*)arg));
            }
-            
+           
+       	}
+        
+        for(i = 0; i < num_reduces; i++){
+            pthread_join(reduce_threads[i], NULL); 
            
         }   
        	
-//        printContentsShareMem(0,shmem);
-//        printContentsShareMem(1,shmem);
+        printContentsShareMem(0,shmem);
+        printContentsShareMem(1,shmem);
     }
     return 0;
 }
