@@ -909,6 +909,7 @@ int main(int argc, char ** argv){
             --n;
        }
 
+       //SEGFaults on this sortPairArr underneath
 //        for(i = 0; i < num_maps; i++){
 //            sortPairArr(shmem, i);
 //        }
