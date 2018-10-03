@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 #include <pthread.h>
 #include <string.h>
 #include <fcntl.h>
@@ -13,6 +14,8 @@ int num_maps; //number of maps
 int num_reduces; //number of reduces
 const char * infile; //name of input file
 const char * outfile; //name of output file
+int maxBytes = 20;
+
 
 pthread_barrier_t map_barrier; //barrier used to wait for map threads to finish
 
@@ -193,6 +196,44 @@ struct pair* getCopyOfPairArr( void* shareMem, int threadID){
 
 
 }
+
+//writes each pair array for each reduce thread
+void writePairsToFile(char* filename, int numOfReduces, void* shareMem){
+    FILE *fp;
+    int i;
+    int j;
+    fp = fopen( filename, "w" );
+
+    if (fp == NULL)
+    {
+        printf("Error opening file!\n");
+        exit(1);
+    }
+
+    for(i = 0; i < numOfReduces; i++){
+    	struct pair* pairArr = getCopyOfPairArr( shareMem, i);
+    	j = 0;
+    	while(1){
+      	if(pairArr[j].value == -1){break;}
+        
+      	char* snum = (char*)malloc( maxBytes  * sizeof(char));
+      	sprintf(snum, "%d", pairArr[j].value);    
+      	fprintf(fp, pairArr[j].key );
+      	fprintf(fp, " ");
+      	fprintf(fp, snum );
+      
+      	fprintf(fp,"\n");
+      	free(snum);
+       	j++;
+     
+      }
+     	free(pairArr);
+    }
+    	fclose(fp);
+}
+
+
+
 
 //just a function to check if your a the cap of the array, if so then extends is by times 2
 struct pair * checkArrlist(struct pair* pairArr, int current){	
@@ -534,7 +575,9 @@ void * map_wordcount(void * threadArg){
 //    printPairArr(pairArr);
     
     writeToSharedMem(shmem, pairArr,threadID);
-    pthread_barrier_wait(&map_barrier);   
+    if(strcmp(impl,"threads") == 0){ 
+        pthread_barrier_wait(&map_barrier);
+    }
     
     return NULL;
 }
@@ -542,12 +585,9 @@ void * map_wordcount(void * threadArg){
 
 void * map_sort(void * threadArg){
     struct threadInput * input  = (struct threadInput *)threadArg;
-   // printf("Thread: %d got here\n", (*input).threadID);
-   // printf("%s\n", (*input).partialBuffer);
     char * buffer = (*input).partialBuffer;
     void * shmem = (*input).shareMem;
     int threadID = (*input).threadID;
-    int maxBytes = 0;
     int i;
     int start = 0, end = 0, totalNumbers = 0, pairPos = 0;
     int keyPos = 0;
@@ -569,7 +609,6 @@ void * map_sort(void * threadArg){
     }
     struct pair* pairArr = (struct pair *)malloc( (totalNumbers+1) * sizeof(struct pair));
     char * key;
-	printf("total numbers: %d\n", totalNumbers);
     while(start < strlen(buffer)){
         if(buffer[start] >= '0' && buffer[start] <= '9'){
             start++;
@@ -609,7 +648,10 @@ void * map_sort(void * threadArg){
     printPairArr(pairArr);
     
     writeToSharedMem(shmem, pairArr,threadID);
-    pthread_barrier_wait(&map_barrier);    
+
+    if(strcmp(impl, "threads") == 0) {
+        pthread_barrier_wait(&map_barrier);
+    }
 
     return NULL;
 }
@@ -699,6 +741,8 @@ int main(int argc, char ** argv){
 
     pthread_t map_threads[num_maps];
     pthread_t reduce_threads[num_reduces];
+
+    pid_t map_procs[num_maps];
    
     int i,j;
 
@@ -732,7 +776,6 @@ int main(int argc, char ** argv){
     	for(i = 0; i < num_maps; i++){
     		if(i == num_maps - 1){ //this is created for the last iteration of the loop
     			delimArr[delimPos] = fsize - 1;
-
     			break;
     		}
     		position = ((i+1) * size) - 1; //gets the position at the (i+1)th thread    	
@@ -801,7 +844,7 @@ int main(int argc, char ** argv){
            if(strcmp(app,"sort") == 0){
     //          pthread_create(&reduce_threads[i], NULL, reduce_sort, (void*)arg);
            }else{
-           printf("num reduc: %d\n", num_reduces);
+              printf("num reduc: %d\n", num_reduces);
            	  printf("pthread: %d\n",pthread_create(&reduce_threads[i], NULL, reduce_wc, (void*)arg));
            }
            
@@ -814,6 +857,66 @@ int main(int argc, char ** argv){
   */   	
         printContentsShareMem(0,shmem);
         printContentsShareMem(1,shmem);
+    }
+    else { //use processes instead of threads
+
+        int pos;
+        struct threadInput * arg;
+        char * buffSplit;
+        int prev = 0;
+
+        for(i = 0; i < num_maps; i++){ //creating threads 
+
+           arg = malloc(sizeof(struct threadInput));
+           (*arg).threadID = i;
+           (*arg).shareMem = shmem;
+           buffSplit = (char*) malloc(delimArr[i+1]-prev+1+1);
+           pos = 0;
+           for(j = prev; j <= delimArr[i+1]; j++){
+              buffSplit[pos] = buffer[j];
+              pos++;
+           }
+           
+           prev = delimArr[i+1]+1;        	
+           
+           (*arg).partialBuffer = buffSplit;
+
+            if( (map_procs[i] = fork()) < 0){
+                perror("fork");
+                exit(1);
+            }
+            else if( (map_procs[i] == 0) ){
+                //do work in child
+                printf("process werk werk %d, passing in this ID to arg: %d\n", map_procs[i], i);
+                if(strcmp(app, "sort") == 0){
+                    map_sort((void*)arg);
+                }
+                else {
+                    map_wordcount((void*)arg);
+                }
+                exit(0);
+            }
+            else {
+                //parent process
+            }
+       }
+       int status;
+       pid_t pid;
+       int n = num_maps;
+       while(n > 0){
+            pid = wait(&status);
+            printf("Child with PID %ld exited with status 0x%x.\n", (long)pid, status);
+            --n;
+       }
+
+//        for(i = 0; i < num_maps; i++){
+//            sortPairArr(shmem, i);
+//        }
+//        mergeShareMem(shmem,num_maps);
+//        writeBackOrganize(shmem, num_maps);
+
+//        printContentsShareMem(0,shmem);
+//        printContentsShareMem(1,shmem);
     }
     return 0;
 }
