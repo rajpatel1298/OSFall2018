@@ -8,12 +8,14 @@
 #include <unistd.h>
 #include <errno.h>
 
+#define keySize 20
+
 const char * app; //wordcount or sort
 const char * impl; //procs or threads
 int num_maps; //number of maps
 int num_reduces; //number of reduces
 const char * infile; //name of input file
-const char * outfile; //name of output file
+char * outfile; //name of output file
 int maxBytes = 20;
 
 
@@ -39,7 +41,8 @@ struct threadInput
 
 struct pair
 {
-	char* key;
+    //char * key;
+	char key[keySize];
 	int value;
 };
 //Prints input array of pairs
@@ -65,19 +68,24 @@ void printPairArr( struct pair* pairArr ){
 
 }
 
-char * convertIntForStrcmp(char * target, int numOfBytes){
-    char * final = (char*)malloc(numOfBytes * sizeof(char));
-    int size = (int) strlen(target);
+//converts a string that contains an int to a new string that strcmp() can use. numOfBytes tells the func the size of the new string
+//For example-> target = "123" and numOfBytes = 5, the result would be-> "00123"
+//remember to free the string that you sent into this function since you'll probs not use it again and to free this string
+//also note every string you sent this must contain the same numOfBytes arg for strcmp to work
+char * convertIntForStrcmp(char* target, int numOfBytes){
+    
+    char* final = (char*)malloc(numOfBytes * sizeof(char));
+    int size = (int)strlen(target);
     int i,j;
-
+                                    //zeroing out the newly created string
     for(i = 0; i < numOfBytes; i++){
         final[i] = '0';
     }
-
-    for(i = size-1, j = numOfBytes - 2; i >= 0; i--, j--){
+                                    //copy the arg string into the newly created string starting from right to left
+    for(i = size -1 , j = numOfBytes -2 ; i >= 0; i --, j--){
         final[j] = target[i];
     }
-
+    
     final[numOfBytes - 1] = '\0';
     return final;
 }
@@ -106,14 +114,13 @@ void writeToSharedMem(void* shareMem, struct pair * pairArr, int threadID){
 	int i = 0;
 
 	while(1){
-
+		
 		memcpy(shareMem + y + x, &(pairArr[i]), sizeof(struct pair));
 		
 		y+= sizeof(struct pair);	//incr the next position in the pair array store in share memory
 
 		if(pairArr[i].value == -1)	//marks the end of the pair array
 		{
-
 			break;
 		}
 
@@ -180,7 +187,8 @@ struct pair* getCopyOfPairArr( void* shareMem, int threadID){
 		
 		struct pair* pairArr = (struct pair*)(shareMem + x + y);
 		
-		pairArrCopy[i].key = pairArr->key;
+		//pairArrCopy[i].key = pairArr->key;
+                strcpy(pairArrCopy[i].key, pairArr->key);/////new
 		pairArrCopy[i].value = pairArr->value;
 
 		if(pairArr->value == -1){
@@ -197,45 +205,7 @@ struct pair* getCopyOfPairArr( void* shareMem, int threadID){
 
 }
 
-//writes each pair array for each reduce thread
-void writePairsToFile(char* filename, int numOfReduces, void* shareMem){
-    FILE *fp;
-    int i;
-    int j;
-    fp = fopen( filename, "w" );
-
-    if (fp == NULL)
-    {
-        printf("Error opening file!\n");
-        exit(1);
-    }
-
-    for(i = 0; i < numOfReduces; i++){
-    	struct pair* pairArr = getCopyOfPairArr( shareMem, i);
-    	j = 0;
-    	while(1){
-      	if(pairArr[j].value == -1){break;}
-        
-      	char* snum = (char*)malloc( maxBytes  * sizeof(char));
-      	sprintf(snum, "%d", pairArr[j].value);    
-      	fprintf(fp, pairArr[j].key );
-      	fprintf(fp, " ");
-      	fprintf(fp, snum );
-      
-      	fprintf(fp,"\n");
-      	free(snum);
-       	j++;
-     
-      }
-     	free(pairArr);
-    }
-    	fclose(fp);
-}
-
-
-
-
-//just a function to check if your a the cap of the array, if so then extends is by times 2
+//just a function to check if your at the cap of the array, if so then extends is by times 2
 struct pair * checkArrlist(struct pair* pairArr, int current){	
 				//getting size of array
 	int size = SIZE;
@@ -245,7 +215,7 @@ struct pair * checkArrlist(struct pair* pairArr, int current){
 		struct pair * nwPairArr = (struct pair*)malloc( (size * 2) * sizeof(struct pair));
 		memcpy(nwPairArr, pairArr, (size) * sizeof(struct pair) );
 		SIZE = size * 2;
-		free(pairArr);
+	//	free(pairArr);
 
 		return nwPairArr;
 			}
@@ -257,15 +227,101 @@ struct pair * checkArrlist(struct pair* pairArr, int current){
 }
 
 
+//function divides up the pair array located in the first index of shared memory and writes matching pairs to indiv indexes with the last
+//index having the rest of the pairs. Takes in shared memory pointer and the max number of reduce threads
+void writeBackOrganize(void* shareMem, int maxThreadID){
+
+						//getting the sorted pair array
+	struct pair* organizeArr = getCopyOfPairArr(shareMem, 0);
+
+	int currentThread = 0;
+	int currentPos = 1;
+	int currentPairArr = 1;
+	SIZE = 1;
+						//the array that holds matching pairs to be writen to shared memory
+	struct pair* pairArr = (struct pair *)malloc( sizeof(struct pair));
+
+						//making the first entry in the org array the first entry in the matching array
+	//pairArr[0].key   = organizeArr[0].key;
+        strcpy(pairArr[0].key , organizeArr[0].key); //new
+	pairArr[0].value = organizeArr[0].value;
+	
+	while(1){			
+						//if were on the last reduce thread then we just have to write the rest of the org array to that
+						//threads spot in shared memory
+		if(currentThread == (maxThreadID -1)){
+			writeToSharedMem(shareMem, organizeArr += (currentPos -1), currentThread );
+		//	free(pairArr);
+		//	free(organizeArr);
+			return;
+						}
+						//if were at the limit of the org array thus the matching pair array is written to shared memory
+		if(organizeArr[currentPos].value == -1){
+			pairArr = checkArrlist(pairArr, currentPos);
+			//pairArr[currentPairArr].key   = organizeArr[currentPos].key;
+                         strcpy( pairArr[currentPairArr].key, organizeArr[currentPos].key);   ///new
+
+			pairArr[currentPairArr].value = organizeArr[currentPos].value;
+
+			writeToSharedMem(shareMem, pairArr, currentThread );
+		//	free(pairArr);
+		//	free(organizeArr);
+
+					     //since were at the limit of shared memory we have to write the def end node to the remaining reduces
+			int i;
+			for(i = currentThread + 1; i < maxThreadID; i += 1){
+				pairArr = (struct pair*)malloc(sizeof(struct pair));
+				pairArr[0].value = -1;
+				pairArr[0].key[0] = 'e';    //new
+                                pairArr[0].key[1] = 'd';
+                                pairArr[0].key[2] = '\0';
+
+				writeToSharedMem(shareMem, pairArr, i);
+		//		free(pairArr);
+					}	
+			return;  
+			}
+					     //the next node on the org array matching the matching pair thus we add it to that array
+		if( strcmp(pairArr[0].key, organizeArr[currentPos].key )== 0){
+			pairArr = checkArrlist(pairArr, currentPairArr);
+			//pairArr[currentPairArr].key   = organizeArr[currentPos].key;
+                         strcpy( pairArr[currentPairArr].key, organizeArr[currentPos].key); //new
+			pairArr[currentPairArr].value = organizeArr[currentPos].value;
+			currentPairArr += 1;
+			}
+
+					//if the next pair doesnt match so we write the matching pair array to its location and start anew
+		else{ 
+			pairArr = checkArrlist(pairArr, currentPos);
+			pairArr[currentPairArr].value   = -1;
+			//pairArr[currentPairArr].key = "end";
+                        //pairArr[currentPairArr].key[0] = 'e';    //new
+                       // pairArr[currentPairArr].key[1] = 'd';
+                       // pairArr[currentPairArr].key[2] = '\0';
+                         strcpy( pairArr[currentPairArr].key, "end"); 
+			writeToSharedMem(shareMem, pairArr, currentThread );
+			
+
+			currentThread += 1;
+			currentPairArr = 1;
+			//pairArr[0].key   = organizeArr[currentPos].key;
+                        strcpy( pairArr[0].key, organizeArr[currentPos].key);   //new
+
+			pairArr[0].value = organizeArr[currentPos].value;
+		}
+		currentPos += 1;
+	}
+}
+
 //will merge all of the pair arrs located in the shared memory in order and write a new pair arr back to the first index in the shared memory
 //max threadID tells the system how many different indexes to merge from
 void mergeShareMem(void* shareMem, int maxThreadID){
 	
-	char* minKey;
-	int i, size, minValue,current;
+	//char* minKey;
+	int i, size,current,minValue;
 	size = 1;
 	current = 0;
-
+        char minKey[keySize];
 	struct pair* mergePairArr = (struct pair*)malloc( size * sizeof(struct pair) );
 	
 		
@@ -281,8 +337,9 @@ void mergeShareMem(void* shareMem, int maxThreadID){
 	{
 										//making the def min the first pair in the first thread
 	      struct pair* pairArr = (struct pair*)(shareMem + positionArr[0]);
+              strcpy( minKey, pairArr->key);   ///new
 	      minValue = pairArr->value;
-	      minKey   = pairArr->key;
+	     // minKey   = pairArr->key;
 		
 								//have to first find the most min value
 		for( i = 0; i < maxThreadID ; i ++)
@@ -297,11 +354,13 @@ void mergeShareMem(void* shareMem, int maxThreadID){
 			
 			if( 0 > strcmp(pairArr->key, minKey) ){
 				minValue = pairArr->value;
-				minKey   = pairArr->key; 
+				//minKey   = pairArr->key; 
+                                strcpy( minKey, pairArr->key); //new
 					}
 			if(minValue == -1){			//if the current min is a end node then change it to the current node
 				minValue = pairArr->value;
-				minKey   = pairArr->key; 
+				//minKey   = pairArr->key; 
+                                 strcpy( minKey, pairArr->key);
 				}
 			
 		}
@@ -327,7 +386,8 @@ void mergeShareMem(void* shareMem, int maxThreadID){
 		   if(0 == strcmp(pairArr->key, minKey )  ) //found a match min so add it the merge arr
 			{
 		        mergePairArr = checkArrlist(mergePairArr, current);
-			mergePairArr[current].key   = pairArr->key;
+			//mergePairArr[current].key   = pairArr->key;
+                        strcpy( mergePairArr[current].key , pairArr->key);  //new
 			mergePairArr[current].value = pairArr->value;
 			
 			current += 1;
@@ -346,87 +406,15 @@ void mergeShareMem(void* shareMem, int maxThreadID){
 	
 	mergePairArr = checkArrlist(mergePairArr, current);
 							//giving the merge arr a end node
-	mergePairArr[current].key  = "end";
+	//mergePairArr[current].key  = "end";
+        strcpy( mergePairArr[current].key , "end");  //new
 	mergePairArr[current].value = -1;
 							//writing the new merged arr back to the first index in shared memory 
 	writeToSharedMem(shareMem, mergePairArr, 0);
-	free(mergePairArr);
-	free(positionArr);
+	//free(mergePairArr);
+	//free(positionArr);
 
 }
-//function divides up the pair array located in the first index of shared memory and writes matching pairs to indiv indexes with the last
-//index having the rest of the pairs. Takes in shared memory pointer and the max number of reduce threads
-void writeBackOrganize(void* shareMem, int maxThreadID){
-
-						//getting the sorted pair array
-	struct pair* organizeArr = getCopyOfPairArr(shareMem, 0);
-
-	int currentThread = 0;
-	int currentPos = 1;
-	int currentPairArr = 1;
-	SIZE = 1;
-						//the array that holds matching pairs to be writen to shared memory
-	struct pair* pairArr = (struct pair *)malloc( sizeof(struct pair));
-
-						//making the first entry in the org array the first entry in the matching array
-	pairArr[0].key   = organizeArr[0].key;
-	pairArr[0].value = organizeArr[0].value;
-	
-	while(1){			
-						//if were on the last reduce thread then we just have to write the rest of the org array to that
-						//threads spot in shared memory
-		if(currentThread == (maxThreadID -1)){
-			writeToSharedMem(shareMem, organizeArr += (currentPos -1), currentThread );
-	//		free(pairArr);
-	//		free(organizeArr);
-			return;
-						}
-						//if were at the limit of the org array thus the matching pair array is written to shared memory
-		if(organizeArr[currentPos].value == -1){
-			pairArr = checkArrlist(pairArr, currentPos);
-			pairArr[currentPairArr].key   = organizeArr[currentPos].key;
-			pairArr[currentPairArr].value = organizeArr[currentPos].value;
-
-			writeToSharedMem(shareMem, pairArr, currentThread );
-	//		free(pairArr);
-	//		free(organizeArr);
-
-					     //since were at the limit of shared memory we have to write the def end node to the remaining reduces
-			int i;
-			for(i = currentThread + 1; i < maxThreadID; i += 1){
-				pairArr = (struct pair*)malloc(sizeof(struct pair));
-				pairArr[0].value = -1;
-				pairArr[0].key = "end";
-				writeToSharedMem(shareMem, pairArr, i);
-	//			free(pairArr);
-					}	
-			return;  
-			}
-					     //the next node on the org array matching the matching pair thus we add it to that array
-		if( strcmp(pairArr[0].key, organizeArr[currentPos].key )== 0){
-			pairArr = checkArrlist(pairArr, currentPairArr);
-			pairArr[currentPairArr].key   = organizeArr[currentPos].key;
-			pairArr[currentPairArr].value = organizeArr[currentPos].value;
-			currentPairArr += 1;
-			}
-
-					//if the next pair doesnt match so we write the matching pair array to its location and start anew
-		else{ 
-			pairArr = checkArrlist(pairArr, currentPos);
-			pairArr[currentPairArr].value   = -1;
-			pairArr[currentPairArr].key = "end";
-			writeToSharedMem(shareMem, pairArr, currentThread );
-			
-
-			currentThread += 1;
-			currentPairArr = 1;
-			pairArr[0].key   = organizeArr[currentPos].key;
-			pairArr[0].value = organizeArr[currentPos].value;
-		}
-		currentPos += 1;
-	}
-}
-
 
 //sorts the array of pairs based on their key values on the index based on the threadID and writes the newly sorted array back to shared memory
 void sortPairArr(void* shareMem, int threadID)
@@ -435,8 +423,8 @@ void sortPairArr(void* shareMem, int threadID)
    int  value, j;
    int size = 0;
    int i = 0;
-   char* key;
-   	
+  // char* key;
+    char key[keySize];	
    struct pair * pairArr = getCopyOfPairArr(shareMem, threadID);
 
   					 //getting the size of the pairArr
@@ -452,29 +440,76 @@ void sortPairArr(void* shareMem, int threadID)
   					//sorting the array using standard insertion sort, not the best but the easiest way to do it
    for (i = 1; i < (size -1); i++)	//(size -1) b/c we dont want to include the end node in sorting
    {
-       key = pairArr[i].key;
-       value = pairArr[i].value;
+      // key = pairArr[i].key;
+      strcpy( key, pairArr[i].key); //new
+      value = pairArr[i].value;
 
        j = i-1;
  
       
        while (j >= 0 && (0 < strcmp(pairArr[j].key, key)) )  
        {
-           pairArr[j+1].key = pairArr[j].key;
+           //pairArr[j+1].key = pairArr[j].key;
+             strcpy( pairArr[j+1].key, pairArr[j].key);  //new
 	   pairArr[j+1].value = pairArr[j].value;
 
            j = j-1;
        }
-
-	   
-	   		       
-       pairArr[j+1].key = key;
+       //pairArr[j+1].key = key;
+         strcpy( pairArr[j+1].key, key); //new
        pairArr[j+1].value = value;
    }
 
 					//finished sorting now writing the new array of pairs back to the shared memory
    writeToSharedMem(shareMem, pairArr, threadID );
 
+}
+
+
+int BiggestNumByte = 10;
+
+void writePairsToFile(char* filename, int numOfReduces, void* shareMem){
+    printf("w1\n");
+    FILE *fp;
+    int i;
+    int j;
+    fp = fopen( filename, "w" );
+
+     printf("w2\n");
+    if (fp == NULL)
+    {
+        printf("Error opening file!\n");
+        exit(1);
+    }
+ printf("w3\n");
+    for(i = 0; i < numOfReduces; i++){
+
+    struct pair* pairArr = getCopyOfPairArr( shareMem, i);
+     
+    j = 0;
+  printf("yooo\n");
+    while(1){
+       
+       if(pairArr[j].value == -1){break;}
+        
+      char* snum = (char*)malloc( BiggestNumByte * sizeof(char));
+      sprintf(snum, "%d", pairArr[j].value);    
+      fprintf(fp, pairArr[j].key );
+      fprintf(fp, " ");
+      fprintf(fp, snum );
+      
+      
+
+      fprintf(fp,"\n");
+   //   free(snum);
+       j++;
+     
+        }
+   //  free(pairArr);
+    } 
+   
+    
+    fclose(fp);
 }
 
 int isNotDelim(char c){
@@ -535,12 +570,16 @@ void * map_wordcount(void * threadArg){
 
             //add key and value to pairArr
             pairArr[pairPos].value = 1;
-            pairArr[pairPos].key = key;
+            strcpy(pairArr[pairPos].key, key);
+           // pairArr[pairPos].key = key;
             
             pairPos++;
             
             while(isNotDelim(buffer[start]) == 0){
             	start++;
+					if(start == strlen(buffer)){
+						break;
+					}
             }
             end = start;
             start = end;
@@ -563,12 +602,14 @@ void * map_wordcount(void * threadArg){
 
             //add key and value to pairArr
         pairArr[pairPos].value = 1;
-        pairArr[pairPos].key = key;
+        strcpy(pairArr[pairPos].key, key);
+     //   pairArr[pairPos].key = key;
             
         pairPos++;
     }
     
-    pairArr[totalWords].key = "end";
+    strncpy(pairArr[totalWords].key, "end\0", 4);
+  //  pairArr[totalWords].key = "end";
     pairArr[totalWords].value = -1;
     
 
@@ -607,6 +648,7 @@ void * map_sort(void * threadArg){
             totalNumbers++;
         }
     }
+   
     struct pair* pairArr = (struct pair *)malloc( (totalNumbers+1) * sizeof(struct pair));
     char * key;
     while(start < strlen(buffer)){
@@ -626,26 +668,52 @@ void * map_sort(void * threadArg){
                 maxBytes = strlen(key);
             }
             pairArr[pairPos].value = value;
-            pairArr[pairPos].key = key;
-            
+       //   pairArr[pairPos].key = key;
+            memset(pairArr[pairPos].key, '\0', sizeof(pairArr[pairPos].key));
+            strncpy(pairArr[pairPos].key, key, start-end+1);
+
             pairPos++;
-            end = start+2;
+				while(buffer[start] < '0' || buffer[start] > '9'){
+					start++;
+					if(start == strlen(buffer)){
+						break;
+					}
+				}
+            end = start;
             start = end;
         }
     }
     //need to save last number somehow
-    pairArr[totalNumbers].key = "end";
+   // pairArr[totalNumbers].key = "end";
+    strncpy(pairArr[totalNumbers].key, "end\0", 4);
     pairArr[totalNumbers].value = -1;
     
     
     //update keys so that they work for strcmp
     for(i = 0; i < totalNumbers; i++){
-        char * newKey = convertIntForStrcmp(pairArr[i].key, maxBytes);
-        pairArr[i].key = newKey;
+        //char * newKey = convertIntForStrcmp(pairArr[i].key, maxBytes);
+       // memset(pairArr[i].key, '\0', sizeof(pairArr[i].key));
+       // strncpy(pairArr[i].key, newKey, maxBytes);
+		  
+     	 int j = 0, k = 0;
+		 char final[keySize];
+		 int size = (int)strlen(pairArr[i].key);
+//		 int i,j;
+		                                 //zeroing out the newly created string
+		 for(k = 0; k < keySize; k++){
+		     final[k] = '0';
+		 }
+		                                 //copy the arg string into the newly created string starting from right to left
+		 for(k = size -1 , j = keySize -2 ; k >= 0; k --, j--){
+		     final[j] = pairArr[i].key[k];
+		 }
+		 
+		 final[keySize - 1] = '\0';
+		 strcpy(pairArr[i].key, final);
     }
     
 
-    printPairArr(pairArr);
+  //  printPairArr(pairArr);
     
     writeToSharedMem(shmem, pairArr,threadID);
 
@@ -692,7 +760,8 @@ void * reduce_wc(void * threadArg){
 
     for(i = 0; i < numDiffWords; i++){
 
-        newPairArr[pos1].key = shmemBlock[pos2].key;
+        strncpy(newPairArr[pos1].key, shmemBlock[pos2].key, sizeof(shmemBlock[pos2].key));
+     //   newPairArr[pos1].key = shmemBlock[pos2].key;
         newPairArr[pos1].value = 0;
         currentKey = shmemBlock[pos2].key;
         while( strcmp(currentKey, shmemBlock[pos2].key) == 0 ){
@@ -704,7 +773,8 @@ void * reduce_wc(void * threadArg){
 
     }
     //add last pair struct
-    newPairArr[numDiffWords].key = "end";
+
+    strncpy(newPairArr[numDiffWords].key, "end\0", 4);
     newPairArr[numDiffWords].value = -1;
 	
     writeToSharedMem(shmem, newPairArr, threadID);
@@ -749,7 +819,7 @@ int main(int argc, char ** argv){
     FILE *f = fopen(infile, "rb");
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);
-    SHMEM_SIZE = fsize * 20;
+    SHMEM_SIZE = fsize * 20 * 20;
     INDEX_SIZE = SHMEM_SIZE / num_maps;
 
     fseek(f, 0, SEEK_SET);
@@ -834,7 +904,7 @@ int main(int argc, char ** argv){
             sortPairArr(shmem, i);
         }
         mergeShareMem(shmem,num_maps);
-        writeBackOrganize(shmem, num_maps);
+        writeBackOrganize(shmem, num_reduces);
        	
 		for(i = 0; i < num_reduces; i++){ //creating threads 
            arg = malloc(sizeof(struct threadInput));
@@ -855,8 +925,7 @@ int main(int argc, char ** argv){
            
         }   
   */   	
-        printContentsShareMem(0,shmem);
-        printContentsShareMem(1,shmem);
+        writePairsToFile(outfile, num_reduces, shmem);
     }
     else { //use processes instead of threads
 
@@ -908,16 +977,22 @@ int main(int argc, char ** argv){
             printf("Child with PID %ld exited with status 0x%x.\n", (long)pid, status);
             --n;
        }
-
+        
        //SEGFaults on this sortPairArr underneath
-//        for(i = 0; i < num_maps; i++){
-//            sortPairArr(shmem, i);
-//        }
-//        mergeShareMem(shmem,num_maps);
-//        writeBackOrganize(shmem, num_maps);
+        for(i = 0; i < num_maps; i++){
+            sortPairArr(shmem, i);
+        }
+		  
+		  
+       mergeShareMem(shmem,num_maps);
+       writeBackOrganize(shmem, num_reduces);
 
-//        printContentsShareMem(0,shmem);
-//        printContentsShareMem(1,shmem);
+		 for(i = 0; i < num_maps; i++){
+            printContentsShareMem(i,shmem);
+       }
+
+		writePairsToFile(outfile, num_reduces, shmem);
+		 
     }
     return 0;
 }
