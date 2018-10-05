@@ -813,6 +813,7 @@ int main(int argc, char ** argv){
     pthread_t reduce_threads[num_reduces];
 
     pid_t map_procs[num_maps];
+    pid_t reduce_procs[num_reduces];
    
     int i,j;
 
@@ -987,8 +988,45 @@ int main(int argc, char ** argv){
        mergeShareMem(shmem,num_maps);
        writeBackOrganize(shmem, num_reduces);
 
-		 for(i = 0; i < num_maps; i++){
+	   for(i = 0; i < num_maps; i++){
             printContentsShareMem(i,shmem);
+       }
+
+       //call reduce processes
+
+        for(i = 0; i < num_reduces; i++){  
+
+            arg = malloc(sizeof(struct threadInput));
+            (*arg).threadID = i;
+            (*arg).shareMem = shmem;
+
+            if( (reduce_procs[i] = fork()) < 0){
+                perror("fork");
+                exit(1);
+            }
+            else if( (reduce_procs[i] == 0) ){
+                //do work in child
+                printf("process werk werk %d, passing in this ID to arg: %d\n", map_procs[i], i);
+                if(strcmp(app, "sort") == 0){
+                  //  reduce_sort((void*)arg);
+                }
+                else {
+                    reduce_wc((void*)arg);
+                }
+                exit(0);
+            }
+            else {
+                //parent process
+            }
+        }
+
+        //wait for processes to finish
+
+       int r = num_maps;
+       while(r > 0){
+            pid = wait(&status);
+            printf("Child with PID %ld exited with status 0x%x.\n", (long)pid, status);
+            --r;
        }
 
 		writePairsToFile(outfile, num_reduces, shmem);
