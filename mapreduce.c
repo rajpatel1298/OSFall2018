@@ -30,11 +30,12 @@ long SHMEM_SIZE;
 int SIZE = 1;
 
 struct threadInput
-{ 
-   void* shareMem;
-   int   threadID;
-   char* partialBuffer;
-};
+	{ 
+	   void* shareMem;
+	   int   threadID;
+	   char* partialBuffer;
+	   struct pair* (*fun_ptr)(struct pair*);
+	};
 
 //For word part you'd have to make the key the ascii value of that number and make the value the number since
 //the reduce organization part sorts by the key
@@ -469,47 +470,41 @@ void sortPairArr(void* shareMem, int threadID)
 int BiggestNumByte = 10;
 
 void writePairsToFile(char* filename, int numOfReduces, void* shareMem){
-    printf("w1\n");
-    FILE *fp;
-    int i;
-    int j;
-    fp = fopen( filename, "w" );
-
-     printf("w2\n");
-    if (fp == NULL)
-    {
-        printf("Error opening file!\n");
-        exit(1);
-    }
- printf("w3\n");
-    for(i = 0; i < numOfReduces; i++){
-
-    struct pair* pairArr = getCopyOfPairArr( shareMem, i);
-     
-    j = 0;
-  printf("yooo\n");
-    while(1){
-       
-       if(pairArr[j].value == -1){break;}
-        
-      char* snum = (char*)malloc( BiggestNumByte * sizeof(char));
-      sprintf(snum, "%d", pairArr[j].value);    
-      fprintf(fp, pairArr[j].key );
-      fprintf(fp, " ");
-      fprintf(fp, snum );
-      
-      
-
-      fprintf(fp,"\n");
-   //   free(snum);
-       j++;
-     
-        }
-   //  free(pairArr);
-    } 
-   
-    
-    fclose(fp);
+	    FILE *fp;
+	    int i;
+	    int j;
+	    fp = fopen( filename, "w" );
+	    if (fp == NULL)
+	    {
+	        printf("Error opening file!\n");
+	        exit(1);
+	    }
+	    for(i = 0; i < numOfReduces; i++){
+	
+	    struct pair* pairArr = getCopyOfPairArr( shareMem, i);
+	     
+	    j = 0;
+	    while(1){
+	       
+	       if(pairArr[j].value == -1){break;}
+	        
+	      char* snum = (char*)malloc( BiggestNumByte * sizeof(char));
+	      sprintf(snum, "%d", pairArr[j].value);  
+	      if(strcmp(pairArr[j].key,"") != 0){  
+	      fprintf(fp, pairArr[j].key );
+	      fprintf(fp, "\t");}
+	      fprintf(fp, snum );
+	      
+	      fprintf(fp,"\n");
+	   //   free(snum);
+	       j++;
+	     
+	        }
+	   //  free(pairArr);
+	    } 
+	   
+	    
+	    fclose(fp);
 }
 
 int isNotDelim(char c){
@@ -724,16 +719,16 @@ void * map_sort(void * threadArg){
     return NULL;
 }
 
-void * reduce_wc(void * threadArg){
-    struct threadInput * input  = (struct threadInput *)threadArg;
-    void * shmem = (*input).shareMem;
-    int threadID = (*input).threadID;
-	printf("we in threadID: %d\n", threadID);
+struct pair * reduce_wc(struct pair * shmemBlock){
+//    struct threadInput * input  = (struct threadInput *)threadArg;
+//    void * shmem = (*input).shareMem;
+//    int threadID = (*input).threadID;
+//	printf("we in threadID: %d\n", threadID);
     //for the case that the number of maps = the number of reduces
     int i = 0;
     int numDiffWords = 1;
 
-    struct pair * shmemBlock = getCopyOfPairArr(shmem, threadID);
+//    struct pair * shmemBlock = getCopyOfPairArr(shmem, threadID);
 
 	char * currentKey = shmemBlock[0].key;
 	while(1){
@@ -777,9 +772,32 @@ void * reduce_wc(void * threadArg){
     strncpy(newPairArr[numDiffWords].key, "end\0", 4);
     newPairArr[numDiffWords].value = -1;
 	
-    writeToSharedMem(shmem, newPairArr, threadID);
-	printf(":gsag\n");
-    return NULL;
+//    writeToSharedMem(shmem, newPairArr, threadID);
+//    return NULL;
+	  return newPairArr;
+}
+
+void * reduce(void * threadArg){
+	    struct threadInput * input  = (struct threadInput *)threadArg;
+	    void * shmem = (*input).shareMem;
+	    int threadID = (*input).threadID;
+	    struct pair* pairArr = getCopyOfPairArr(shmem,threadID);
+	  
+	   //calling generic reduce
+	   pairArr = (*input).fun_ptr(pairArr);
+	
+	   writeToSharedMem(shmem, pairArr, threadID);
+	   return NULL;
+}
+
+struct pair* reduce_sort(struct pair* pairArr){
+	     int i = 0;
+	        while(1){
+	            if(pairArr[i].value == -1){break;}
+	            strcpy(pairArr[i].key,"");
+	            i++;
+	             }
+	        return pairArr;
 }
 
 
@@ -851,11 +869,11 @@ int main(int argc, char ** argv){
     		}
     		position = ((i+1) * size) - 1; //gets the position at the (i+1)th thread    	
     		if(strcmp(app,"sort") == 0){
-    			while(buffer[position] != '\n'){
+    			while(buffer[position] >= '0' && buffer[position] <= '9'){
     				position--;
     			}
     		}else{
-    			while(buffer[position] != ' ' && buffer[position] != '.' && buffer[position] != ',' && buffer[position] != ';' && buffer[position] != ':' && buffer[position] != '!' && buffer[position] != '-'){
+    			while(isNotDelim(buffer[position]) == 1){
     				position--;
     			}
     		}	
@@ -884,8 +902,23 @@ int main(int argc, char ** argv){
               pos++;
            }
            
-           prev = delimArr[i+1]+1;        	
-           
+           prev = delimArr[i+1]+1;    
+           if(strcmp(app, "sort") == 0){
+           		while(buffer[prev] < '0' || buffer[prev] > '9'){
+           			prev++;
+           			if(i == num_maps-1){
+           				break;
+           			}
+           		}
+           }else{
+                while(isNotDelim(buffer[prev]) == 0){
+                	prev++;
+                	if(i == num_maps-1){
+           				break;
+           			}
+                }
+           }     	
+           printf("jk\n");
            (*arg).partialBuffer = buffSplit;
            if(strcmp(app,"sort") == 0){
 
@@ -913,19 +946,20 @@ int main(int argc, char ** argv){
            (*arg).shareMem = shmem;
            
            if(strcmp(app,"sort") == 0){
-    //          pthread_create(&reduce_threads[i], NULL, reduce_sort, (void*)arg);
+			  (*arg).fun_ptr = reduce_sort;
+              pthread_create(&reduce_threads[i], NULL, reduce, (void*)arg);
            }else{
-              printf("num reduc: %d\n", num_reduces);
-           	  printf("pthread: %d\n",pthread_create(&reduce_threads[i], NULL, reduce_wc, (void*)arg));
+           	  (*arg).fun_ptr = reduce_wc;
+           	  pthread_create(&reduce_threads[i], NULL, reduce, (void*)arg);
            }
            
        	}
-  /*      
+        
         for(i = 0; i < num_reduces; i++){
             pthread_join(reduce_threads[i], NULL); 
            
         }   
-  */   	
+    	
         writePairsToFile(outfile, num_reduces, shmem);
     }
     else { //use processes instead of threads
@@ -947,7 +981,22 @@ int main(int argc, char ** argv){
               pos++;
            }
            
-           prev = delimArr[i+1]+1;        	
+           prev = delimArr[i+1]+1;  
+           if(strcmp(app, "sort") == 0){
+           		while(buffer[prev] < '0' || buffer[prev] > '9'){
+           			prev++;
+           			if(i == num_maps-1){
+           				break;
+           			}
+           		}
+           }else{
+                while(isNotDelim(buffer[prev]) == 0){
+                	prev++;
+                	if(i == num_maps-1){
+           				break;
+           			}
+                }
+           }   	
            
            (*arg).partialBuffer = buffSplit;
 
@@ -1008,10 +1057,12 @@ int main(int argc, char ** argv){
                 //do work in child
                 printf("process werk werk %d, passing in this ID to arg: %d\n", map_procs[i], i);
                 if(strcmp(app, "sort") == 0){
-                  //  reduce_sort((void*)arg);
+                	(*arg).fun_ptr = reduce_sort;
+                    reduce((void*)arg);
                 }
                 else {
-                    reduce_wc((void*)arg);
+                	(*arg).fun_ptr = reduce_wc;
+                    reduce((void*)arg);
                 }
                 exit(0);
             }
