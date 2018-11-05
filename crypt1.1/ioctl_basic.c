@@ -52,6 +52,81 @@ void destroy(unsigned long arg){
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
 }
 
+char * cipher(char msg[]){
+	
+	char key[] = "BOOP";
+
+	int msgSize;
+	int keySize;
+
+	
+	char *ptr = msg; 
+	while(*ptr != '\0'){ //gets the msgSize
+		ptr++;
+		msgSize++;
+	}
+	
+	ptr = key;
+	while(*ptr != '\0){ //gets the keySize
+		ptr++;
+		keySize++;
+	}
+
+
+	char newKey[msgSize]; //msg + newKey = encrypted key
+	char encryptedMsg[msgSize];
+		
+	int i;
+	for(i = 0; i < msgSize; i++){
+		newKey[i] = key[i % keySize];
+	}
+	
+	for(i = 0; i < msgSize; i++){
+		encryptedMsg[i] = ((msg[i] + newKey[i]) % 26) + 'A';
+	}
+	
+	encryptedMsg[i] = '\0';
+	
+	return encryptedMsg;
+}
+
+char * decipher (char msg[]){
+	char key[] = "BOOP";
+	
+	int msgSize;
+	int keySize;
+
+	
+	char *ptr = msg; 
+	while(*ptr != '\0'){ //gets the msgSize
+		ptr++;
+		msgSize++;
+	}
+	
+	ptr = key;
+	while(*ptr != '\0){ //gets the keySize
+		ptr++;
+		keySize++;
+	}
+	char newKey[msgSize]; //msg + newKey = encrypted key
+	char decryptedMsg[msgSize];
+	
+	int i;
+	for(i = 0; i < msgSize; i++){
+		newKey[i] = key[i % keySize];
+	}
+	
+	
+	for(i = 0; i < msgSize; i++){
+		decryptedMsg[i] = ((encryptedMsg[i] - newKey[i] + 26) % 26) + 'A';
+
+	}
+	decryptedMsg[i] = '\0';
+	
+	return decryptedMsg;
+	
+}
+
 void encrypt(unsigned long arg){
 
 	//Getting copy of the struct passed by user
@@ -60,6 +135,10 @@ void encrypt(unsigned long arg){
 	
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
 	
+	
+
+
+
 	//At this point have a copy of user buffer in kernBuffer
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
 }
