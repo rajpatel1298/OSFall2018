@@ -17,7 +17,8 @@ typedef struct s{
 typedef struct d {
 	char keyBuffer[BUFFERSIZE];
 	int encryptFd;
-	int decryptFd;
+	struct file * encryptFP;
+	struct file * decryptFP;
 	int id;
 } device;
 

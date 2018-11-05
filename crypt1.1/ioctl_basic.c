@@ -3,18 +3,21 @@
 #include <linux/init.h>
 #include <linux/syscalls.h>
 #include <linux/fcntl.h>
-#include <linux/fs.h> // required for various structures related to files liked fops. 
+#include <linux/fs.h> // required for various structures related to files liked fops
+
 #include <linux/semaphore.h>
 #include <linux/cdev.h> 
-#include "ioctl_basic.h"    //ioctl header file
 #include <linux/version.h>
 #include <linux/buffer_head.h>
 #include <asm/uaccess.h>
 #include <asm/segment.h>
+#include "ioctl_basic.h"    //ioctl header file
 
 static int Major;
-
+int currentId = 0;
+int createFlag = 0;
 device devices[10];
+
 
 int open(struct inode *inode, struct file *filp)
 {
@@ -28,14 +31,34 @@ int release(struct inode *inode, struct file *filp) {
  return 0;
 }
 
+const char * fetch_create_string(char buf[]){ //0 = encrypt, 1 = decrypt
+	
+	char id [2];
+	id[0] = currentId + '0'; //only cycles from 0-9, so can use ascii value to convert	
+	id[1] = '\0';
+	strcat(buf,id);
 
+	if(createFlag == 2){
+		currentId++;
+		if(currentId == 10){
+			currentId = 0;
+		}
+		createFlag = 0;
+	} else {
+		createFlag++;
+	}
+	return buf;
 
+}
 
 void create(unsigned long arg){
 
 	struct file * filp = NULL;
+	struct file * filp2 = NULL;
 	mm_segment_t oldfs;
 	int err = 0;
+        char encryptBuf[25] = "/dev/cryptEncrypt";
+	char decryptBuf[25] = "/dev/cryptDecrypt";
 	//Getting copy of the struct passed by user
 	argStruct kernStruct;
 	device newDevice;
@@ -45,12 +68,16 @@ void create(unsigned long arg){
 	
 	oldfs = get_fs();
 	set_fs(get_ds());
-	filp = filp_open("/dev/cryptEncrypt0", O_RDWR | O_CREAT, S_IRWXU);
+	
+	filp = filp_open(fetch_create_string(encryptBuf), O_RDWR | O_CREAT, S_IRWXU);
+	filp2 = filp_open(fetch_create_string(decryptBuf), O_RDWR | O_CREAT, S_IRWXU);
 	set_fs(oldfs);
 
-	if(!IS_ERR(filp)){
+	if(!IS_ERR(filp) && !IS_ERR(filp2)){
 		printk("Successfully created files...");
 		strcpy(newDevice.keyBuffer, kernStruct.keyBuffer);
+		newDevice.encryptFP = filp;
+		newDevice.decryptFP = filp2;
 		devices[0] = newDevice;
 		printk("Device struct saved");
 		kernStruct.flag = 1;
@@ -76,6 +103,8 @@ void destroy(unsigned long arg){
 
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
 	
+	
+
 	//At this point have a copy of user buffer in kernBuffer
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
 }
