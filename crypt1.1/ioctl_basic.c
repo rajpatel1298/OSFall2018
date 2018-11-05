@@ -8,7 +8,9 @@
 #include <linux/cdev.h> 
 #include "ioctl_basic.h"    //ioctl header file
 #include <linux/version.h>
+#include <linux/buffer_head.h>
 #include <asm/uaccess.h>
+#include <asm/segment.h>
 
 static int Major;
 
@@ -31,7 +33,9 @@ int release(struct inode *inode, struct file *filp) {
 
 void create(unsigned long arg){
 
-	int fd1, fd2;
+	struct file * filp = NULL;
+	mm_segment_t oldfs;
+	int err = 0;
 	//Getting copy of the struct passed by user
 	argStruct kernStruct;
 	device newDevice;
@@ -39,19 +43,22 @@ void create(unsigned long arg){
 	
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
 	
-	mm_segment_t old_fs = get_fs();
-	set_fs(KERNEL_DS);
-	fd1 = sys_open("/dev/cryptEncrypt0", O_RDWR | O_CREAT, S_IRWXU);
-	fd2 = sys_open("/dev/cryptDecrypt0", O_RDWR | O_CREAT, S_IRWXU);
+	oldfs = get_fs();
+	set_fs(get_ds());
+	filp = filp_open("/dev/cryptEncrypt0", O_RDWR | O_CREAT, S_IRWXU);
+	set_fs(oldfs);
 
-	if(fd1 >= 0 && fd2 >= 0){
+	if(!IS_ERR(filp)){
 		printk("Successfully created files...");
-		newDevice.encryptFd = fd1;
-		newDevice.decryptFd = fd2;
 		strcpy(newDevice.keyBuffer, kernStruct.keyBuffer);
 		devices[0] = newDevice;
 		printk("Device struct saved");
-		set_fs(old_fs);
+		kernStruct.flag = 1;
+		raw_copy_to_user(userStruct, &kernStruct, sizeof(argStruct));
+	}
+	else {
+		err = PTR_ERR(filp);
+		return;
 	}
 
 	//At this point have a copy of user buffer in kernBuffer
