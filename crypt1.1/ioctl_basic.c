@@ -78,7 +78,8 @@ void create(unsigned long arg){
 		strcpy(newDevice.keyBuffer, kernStruct.keyBuffer);
 		newDevice.encryptFP = filp;
 		newDevice.decryptFP = filp2;
-		devices[0] = newDevice;
+		newDevice.id = currentId;
+		devices[currentId] = newDevice;
 		printk("Device struct saved");
 		kernStruct.flag = 1;
 		raw_copy_to_user(userStruct, &kernStruct, sizeof(argStruct));
@@ -102,7 +103,9 @@ void destroy(unsigned long arg){
 	
 
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
-	
+	filp_close(devices[kernStruct.id].encryptFP, NULL);
+	filp_close(devices[kernStruct.id].decryptFP, NULL);
+
 	
 
 	//At this point have a copy of user buffer in kernBuffer
@@ -178,9 +181,13 @@ case DECRYPT:
  decrypt(arg);
  break;
 
-default:
- printk(KERN_INFO "YOU DONE FUCKED UP");
+case 69:
+ printk(KERN_INFO "CASE ENCRYPT");
+ encrypt(arg);
+ break;
 
+default:
+ printk(KERN_INFO "DEF");
  } 
  
 return ret;
