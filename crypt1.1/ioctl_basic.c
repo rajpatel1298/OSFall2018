@@ -31,6 +31,56 @@ int release(struct inode *inode, struct file *filp) {
  return 0;
 }
 
+struct file * file_open(const char * path, int flags, int rights){
+	struct file * filp = NULL;
+	mm_segment_t oldFs;
+
+	int err = 0;
+	oldFs = get_fs();
+	set_fs(get_ds());
+	filp = filp_open(path,flags,rights);
+	set_fs(oldFs);
+
+	if(IS_ERR(filp)){
+		err = PTR_ERR(filp);
+		return NULL;
+	}
+
+	return filp;
+}
+
+void file_close(struct file * file){
+	filp_close(file,NULL);
+}
+
+int file_read(struct file * file, unsigned long long offset, unsigned char * data, unsigned int size){
+	mm_segment_t oldFs;
+	int ret;
+
+	oldFs = get_fs();
+	set_fs(get_ds());
+
+	ret = vfs_read(file,data,size, &offset);
+
+	set_fs(oldFs);
+	return ret;
+}
+
+int file_write(struct file * file, unsigned long long offset, unsigned char * data, unsigned int size){
+
+	mm_segment_t oldFs;
+	int ret;
+
+	oldFs = get_fs();
+        set_fs(get_ds());
+
+	ret = vfs_write(file,data,size,&offset);
+	set_fs(oldFs);
+	
+	return ret; 	
+}
+
+
 const char * fetch_create_string(char buf[]){ //0 = encrypt, 1 = decrypt
 	
 	char id [2];
@@ -55,8 +105,6 @@ void create(unsigned long arg){
 
 	struct file * filp = NULL;
 	struct file * filp2 = NULL;
-	mm_segment_t oldfs;
-	int err = 0;
         char encryptBuf[25] = "/dev/cryptEncrypt";
 	char decryptBuf[25] = "/dev/cryptDecrypt";
 	//Getting copy of the struct passed by user
@@ -66,14 +114,11 @@ void create(unsigned long arg){
 	
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
 	
-	oldfs = get_fs();
-	set_fs(get_ds());
 	
-	filp = filp_open(fetch_create_string(encryptBuf), O_RDWR | O_CREAT, S_IRWXU);
-	filp2 = filp_open(fetch_create_string(decryptBuf), O_RDWR | O_CREAT, S_IRWXU);
-	set_fs(oldfs);
+	filp = file_open(fetch_create_string(encryptBuf), O_RDWR | O_CREAT, S_IRWXU);
+	filp2 = file_open(fetch_create_string(decryptBuf), O_RDWR | O_CREAT, S_IRWXU);
 
-	if(!IS_ERR(filp) && !IS_ERR(filp2)){
+	if( filp && filp2) {
 		printk("Successfully created files...");
 		strcpy(newDevice.keyBuffer, kernStruct.keyBuffer);
 		newDevice.encryptFP = filp;
@@ -83,12 +128,9 @@ void create(unsigned long arg){
 		printk("Device struct saved");
 		kernStruct.flag = 1;
 		raw_copy_to_user(userStruct, &kernStruct, sizeof(argStruct));
+	} else {
+		printk("Error opening files...");
 	}
-	else {
-		err = PTR_ERR(filp);
-		return;
-	}
-
 	//At this point have a copy of user buffer in kernBuffer
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
 	
@@ -120,6 +162,9 @@ void encrypt(unsigned long arg){
 	
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
 	
+       int write = file_write(devices[0].encryptFP, 0, kernStruct.messageBuffer, strlen(kernStruct.messageBuffer));
+
+       printk("Wrote %d bytes into file", write);
 	//At this point have a copy of user buffer in kernBuffer
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
 }
