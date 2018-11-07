@@ -84,7 +84,7 @@ main ( ) {
                 exit(-1);
         }
       
- decrypt(fd);
+ 	create(fd);
 
  
 
