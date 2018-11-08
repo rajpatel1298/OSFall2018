@@ -110,13 +110,13 @@ void encrypt(int fd){
 	printf("ENTER THE KEY: ");
 	fgets(key,10,stdin);
 
-	printf("THIS IS THE KEY: %s\n",id);
+	printf("THIS IS THE KEY: %s\n",key);
 	
 	char message[10];
 	printf("ENTER THE MESSAGE: ");
 	fgets(message,10,stdin);
 
-	printf("THIS IS THE MESSAGE: %s\n",id);
+	printf("THIS IS THE MESSAGE: %s\n",message);
 	
 
 	//creating the user struct
@@ -127,7 +127,7 @@ void encrypt(int fd){
 	userStruct.id = idValue;
 
 	
-
+	printf("Message: %s, Key: %s\n", userStruct.messageBuffer, userStruct.keyBuffer);
 
 	//calling the apporiate lkm function and passing the user struct
 	ioctl(fd,69, &userStruct);

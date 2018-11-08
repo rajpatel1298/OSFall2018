@@ -5,7 +5,7 @@
 #define DESTROY 1
 #define ENCRYPT 2
 #define DECRYPT 3
-#define BUFFERSIZE 5
+#define BUFFERSIZE 10
 
 typedef struct s{
 	char messageBuffer[BUFFERSIZE];
