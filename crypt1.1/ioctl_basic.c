@@ -31,6 +31,8 @@ int release(struct inode *inode, struct file *filp) {
  return 0;
 }
 
+
+
 struct file * file_open(const char * path, int flags, int rights){
 	struct file * filp = NULL;
 	mm_segment_t oldFs;
@@ -80,6 +82,49 @@ int file_write(struct file * file, unsigned long long offset, unsigned char * da
 	return ret; 	
 }
 
+char * cipher(char msg[], char key[]){
+
+        int msgSize = strlen(msg);
+        int keySize = strlen(key);
+
+        char newKey[msgSize]; //msg + newKey = encrypted key
+        char encryptedMsg[msgSize];
+
+        int i;
+        for(i = 0; i < msgSize; i++){
+                newKey[i] = key[i % keySize];
+        }
+	newKey[i] = '\0';
+
+        for(i = 0; i < msgSize; i++){
+                encryptedMsg[i] = ((msg[i] + newKey[i]) % 26) + 'A';
+        }
+
+        encryptedMsg[i] = '\0';
+        strcpy(msg,encryptedMsg);
+
+        return msg;
+}
+char * decipher (char msg[], char key[]){
+       
+        int msgSize = strlen(msg);
+        int keySize = strlen(key);
+
+        char newKey[msgSize]; //msg + newKey = encrypted key
+        char decryptedMsg[msgSize];
+
+        int i;
+        for(i = 0; i < msgSize; i++){
+                newKey[i] = key[i % keySize];
+        }
+
+        for(i = 0; i < msgSize; i++){
+                decryptedMsg[i] = ((msg[i] - newKey[i] + 26) % 26) + 'A';
+        }
+        decryptedMsg[i] = '\0';
+        strcpy(msg,decryptedMsg);
+        return msg;
+}
 
 const char * fetch_create_string(char buf[]){ //0 = encrypt, 1 = decrypt
 	
@@ -159,12 +204,15 @@ void encrypt(unsigned long arg){
 	//Getting copy of the struct passed by user
 	argStruct kernStruct;
 	argStruct * userStruct = (argStruct *)arg;
-	
+	char * finalMessage;
+	int write;
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
 	
-       int write = file_write(devices[0].encryptFP, 0, kernStruct.messageBuffer, strlen(kernStruct.messageBuffer));
+	finalMessage = cipher(kernStruct.messageBuffer, kernStruct.keyBuffer);
 
-       printk("Wrote %d bytes into file", write);
+        write = file_write(devices[kernStruct.id].encryptFP, 0,finalMessage, strlen(kernStruct.messageBuffer));
+
+        printk("Wrote %d bytes into file", write);
 	//At this point have a copy of user buffer in kernBuffer
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
 }
@@ -174,21 +222,21 @@ void decrypt(unsigned long arg){
 	//Getting copy of the struct passed by user
 	argStruct kernStruct;
 	argStruct * userStruct = (argStruct *)arg;
-	
+	char * finalMessage;
+	int write;
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
 	
 	//At this point have a copy of user buffer in kernBuffer
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
 
 
+
 	//Do the decrpyt stuff
 
-	//this is just a dummy decrpyt, remove this when actually implimenting the decrpyt logic
-	kernStruct.messageBuffer[0] = 'F';	
-	kernStruct.messageBuffer[1] = 'o';
-	kernStruct.messageBuffer[2] = 'o';
-	kernStruct.messageBuffer[3] = 'k';
-	kernStruct.messageBuffer[4] = '\n';
+	finalMessage = decipher(kernStruct.messageBuffer, kernStruct.keyBuffer);
+	write = file_write(devices[kernStruct.id].decryptFP,0,finalMessage, strlen(kernStruct.messageBuffer));
+
+	printk("Wrote %d bytes into file", write);
 
 	//Writing to the back to the user buffer
 	//Remember to change to the flag to 1 in order to let user no lkm is done
