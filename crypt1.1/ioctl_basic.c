@@ -84,17 +84,19 @@ int file_write(struct file * file, unsigned long long offset, unsigned char * da
 
 char * cipher(char msg[], char key[]){
 
-        int msgSize = strlen(msg);
-        int keySize = strlen(key);
+        int msgSize = strlen(msg)-1; //changed
+        int keySize = strlen(key)-1; //changed
 
         char newKey[msgSize]; //msg + newKey = encrypted key
         char encryptedMsg[msgSize];
+	msg[msgSize] = '\0';
+	key[keySize] = '\0';
 
+	printk("Message %s. Key %s inside of cipher", msg, key);
         int i;
         for(i = 0; i < msgSize; i++){
                 newKey[i] = key[i % keySize];
         }
-	newKey[i] = '\0';
 
         for(i = 0; i < msgSize; i++){
                 encryptedMsg[i] = ((msg[i] + newKey[i]) % 26) + 'A';
@@ -107,11 +109,14 @@ char * cipher(char msg[], char key[]){
 }
 char * decipher (char msg[], char key[]){
        
-        int msgSize = strlen(msg);
-        int keySize = strlen(key);
+        int msgSize = strlen(msg)-1;
+        int keySize = strlen(key)-1;
 
         char newKey[msgSize]; //msg + newKey = encrypted key
         char decryptedMsg[msgSize];
+
+	msg[msgSize] = '\0';
+	key[keySize] = '\0';
 
         int i;
         for(i = 0; i < msgSize; i++){
@@ -208,10 +213,16 @@ void encrypt(unsigned long arg){
 	int write;
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
 	
+	printk("Message Received: %s, Key Received: %s\n", kernStruct.messageBuffer, kernStruct.keyBuffer);
 	finalMessage = cipher(kernStruct.messageBuffer, kernStruct.keyBuffer);
 
-        write = file_write(devices[kernStruct.id].encryptFP, 0,finalMessage, strlen(kernStruct.messageBuffer));
-
+	printk("Final Message cipher %s\n", finalMessage);
+	if(devices[kernStruct.id].encryptFP) {
+        	write = file_write(devices[kernStruct.id].encryptFP, 0,finalMessage, strlen(finalMessage));
+	}
+	else {
+		printk("Null encrypt file pointer...");
+	}
         printk("Wrote %d bytes into file", write);
 	//At this point have a copy of user buffer in kernBuffer
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
