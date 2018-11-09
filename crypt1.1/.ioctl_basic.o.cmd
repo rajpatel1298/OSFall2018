@@ -1,8 +1,8 @@
-cmd_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := gcc -Wp,-MD,/home/luiz/Desktop/OSFall2018/crypt1.1/.ioctl_basic.o.d  -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/7/include  -I./arch/x86/include -I./arch/x86/include/generated  -I./include -I./arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I./include/uapi -I./include/generated/uapi -include ./include/linux/kconfig.h -Iubuntu/include  -D__KERNEL__ -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -Werror-implicit-function-declaration -Wno-format-security -std=gnu89 -fno-PIE -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -funit-at-a-time -DCONFIG_X86_X32_ABI -DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1 -DCONFIG_AS_CFI_SECTIONS=1 -DCONFIG_AS_FXSAVEQ=1 -DCONFIG_AS_SSSE3=1 -DCONFIG_AS_CRC32=1 -DCONFIG_AS_AVX=1 -DCONFIG_AS_AVX2=1 -DCONFIG_AS_AVX512=1 -DCONFIG_AS_SHA1_NI=1 -DCONFIG_AS_SHA256_NI=1 -pipe -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -DRETPOLINE -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-int-in-bool-context -O2 --param=allow-store-data-races=0 -DCC_HAVE_ASM_GOTO -Wframe-larger-than=1024 -fstack-protector-strong -Wno-unused-but-set-variable -Wno-unused-const-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-var-tracking-assignments -pg -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wno-pointer-sign -fno-strict-overflow -fno-merge-all-constants -fmerge-constants -fno-stack-check -fconserve-stack -Werror=implicit-int -Werror=strict-prototypes -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init  -DMODULE  -DKBUILD_BASENAME='"ioctl_basic"'  -DKBUILD_MODNAME='"ioctl_basic"' -c -o /home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o /home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.c
+cmd_/home/raj/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := gcc -Wp,-MD,/home/raj/Desktop/OSFall2018/crypt1.1/.ioctl_basic.o.d  -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/7/include  -I./arch/x86/include -I./arch/x86/include/generated  -I./include -I./arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I./include/uapi -I./include/generated/uapi -include ./include/linux/kconfig.h -Iubuntu/include  -D__KERNEL__ -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -Werror-implicit-function-declaration -Wno-format-security -std=gnu89 -fno-PIE -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -funit-at-a-time -DCONFIG_X86_X32_ABI -DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1 -DCONFIG_AS_CFI_SECTIONS=1 -DCONFIG_AS_FXSAVEQ=1 -DCONFIG_AS_SSSE3=1 -DCONFIG_AS_CRC32=1 -DCONFIG_AS_AVX=1 -DCONFIG_AS_AVX2=1 -DCONFIG_AS_AVX512=1 -DCONFIG_AS_SHA1_NI=1 -DCONFIG_AS_SHA256_NI=1 -pipe -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -DRETPOLINE -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-int-in-bool-context -O2 --param=allow-store-data-races=0 -DCC_HAVE_ASM_GOTO -Wframe-larger-than=1024 -fstack-protector-strong -Wno-unused-but-set-variable -Wno-unused-const-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-var-tracking-assignments -pg -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wno-pointer-sign -fno-strict-overflow -fno-merge-all-constants -fmerge-constants -fno-stack-check -fconserve-stack -Werror=implicit-int -Werror=strict-prototypes -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init  -DMODULE  -DKBUILD_BASENAME='"ioctl_basic"'  -DKBUILD_MODNAME='"ioctl_basic"' -c -o /home/raj/Desktop/OSFall2018/crypt1.1/ioctl_basic.o /home/raj/Desktop/OSFall2018/crypt1.1/ioctl_basic.c
 
-source_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := /home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.c
+source_/home/raj/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := /home/raj/Desktop/OSFall2018/crypt1.1/ioctl_basic.c
 
-deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
+deps_/home/raj/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
   include/linux/compiler_types.h \
     $(wildcard include/config/enable/must/check.h) \
     $(wildcard include/config/enable/warn/deprecated.h) \
@@ -556,9 +556,15 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
   include/linux/rbtree.h \
   arch/x86/include/uapi/asm/vsyscall.h \
   include/asm-generic/fixmap.h \
+  arch/x86/include/asm/hardirq.h \
+    $(wildcard include/config/kvm/intel.h) \
+    $(wildcard include/config/have/kvm.h) \
+    $(wildcard include/config/x86/thermal/vector.h) \
+    $(wildcard include/config/x86/mce/threshold.h) \
+    $(wildcard include/config/x86/mce/amd.h) \
+    $(wildcard include/config/hyperv.h) \
   arch/x86/include/asm/io_apic.h \
   arch/x86/include/asm/irq_vectors.h \
-    $(wildcard include/config/have/kvm.h) \
     $(wildcard include/config/pci/msi.h) \
   include/linux/topology.h \
     $(wildcard include/config/use/percpu/numa/node/id.h) \
@@ -648,15 +654,32 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
     $(wildcard include/config/modules/use/elf/rel.h) \
     $(wildcard include/config/modules/use/elf/rela.h) \
   arch/x86/include/asm/orc_types.h \
-  include/linux/syscalls.h \
-    $(wildcard include/config/ftrace/syscalls.h) \
-    $(wildcard include/config/old/sigsuspend.h) \
-    $(wildcard include/config/old/sigsuspend3.h) \
-    $(wildcard include/config/old/sigaction.h) \
-    $(wildcard include/config/odd/rt/sigaction.h) \
-    $(wildcard include/config/clone/backwards.h) \
-    $(wildcard include/config/clone/backwards3.h) \
-  include/uapi/linux/aio_abi.h \
+  include/linux/kdev_t.h \
+  include/uapi/linux/kdev_t.h \
+  include/linux/slab.h \
+    $(wildcard include/config/debug/slab.h) \
+    $(wildcard include/config/failslab.h) \
+    $(wildcard include/config/slob.h) \
+    $(wildcard include/config/have/hardened/usercopy/allocator.h) \
+    $(wildcard include/config/slab.h) \
+    $(wildcard include/config/slub.h) \
+  include/linux/kmemleak.h \
+  include/linux/kasan.h \
+  include/linux/device.h \
+    $(wildcard include/config/debug/devres.h) \
+    $(wildcard include/config/generic/msi/irq/domain.h) \
+    $(wildcard include/config/pinctrl.h) \
+    $(wildcard include/config/generic/msi/irq.h) \
+    $(wildcard include/config/dma/cma.h) \
+    $(wildcard include/config/of.h) \
+    $(wildcard include/config/devtmpfs.h) \
+    $(wildcard include/config/sysfs/deprecated.h) \
+  include/linux/ioport.h \
+  include/linux/klist.h \
+  include/linux/pinctrl/devinfo.h \
+    $(wildcard include/config/pm.h) \
+  include/linux/pinctrl/consumer.h \
+  include/linux/seq_file.h \
   include/linux/fs.h \
     $(wildcard include/config/fs/posix/acl.h) \
     $(wildcard include/config/security.h) \
@@ -673,8 +696,6 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
     $(wildcard include/config/mandatory/file/locking.h) \
     $(wildcard include/config/migration.h) \
   include/linux/wait_bit.h \
-  include/linux/kdev_t.h \
-  include/uapi/linux/kdev_t.h \
   include/linux/dcache.h \
   include/linux/rculist.h \
   include/linux/rculist_bl.h \
@@ -688,7 +709,6 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
     $(wildcard include/config/have/arch/hash.h) \
   include/linux/path.h \
   include/linux/list_lru.h \
-    $(wildcard include/config/slob.h) \
   include/linux/shrinker.h \
   include/linux/pid.h \
   include/linux/capability.h \
@@ -719,106 +739,12 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
   include/linux/projid.h \
   include/uapi/linux/quota.h \
   include/linux/nfs_fs_i.h \
-  include/linux/signal.h \
-  include/linux/signal_types.h \
-  include/uapi/linux/signal.h \
-  arch/x86/include/asm/signal.h \
-  arch/x86/include/uapi/asm/signal.h \
-  include/uapi/asm-generic/signal-defs.h \
-  arch/x86/include/uapi/asm/siginfo.h \
-  include/uapi/asm-generic/siginfo.h \
-  include/linux/sem.h \
-    $(wildcard include/config/sysvipc.h) \
-  include/uapi/linux/sem.h \
-  include/linux/ipc.h \
-  include/linux/rhashtable.h \
-  include/linux/jhash.h \
-  include/linux/unaligned/packed_struct.h \
-  include/linux/list_nulls.h \
-  include/uapi/linux/ipc.h \
-  arch/x86/include/uapi/asm/ipcbuf.h \
-  include/uapi/asm-generic/ipcbuf.h \
-  arch/x86/include/uapi/asm/sembuf.h \
-  include/uapi/linux/unistd.h \
-  arch/x86/include/asm/unistd.h \
-  arch/x86/include/uapi/asm/unistd.h \
-  arch/x86/include/generated/uapi/asm/unistd_64.h \
-  arch/x86/include/generated/asm/unistd_64_x32.h \
-  include/linux/key.h \
-    $(wildcard include/config/keys.h) \
-  include/linux/assoc_array.h \
-    $(wildcard include/config/associative/array.h) \
-  include/trace/syscall.h \
-    $(wildcard include/config/have/syscall/tracepoints.h) \
-  include/linux/tracepoint.h \
-    $(wildcard include/config/tracepoint.h) \
-  include/linux/trace_events.h \
-    $(wildcard include/config/perf/events.h) \
-    $(wildcard include/config/bpf/events.h) \
-  include/linux/ring_buffer.h \
-    $(wildcard include/config/ring/buffer/allow/swap.h) \
-    $(wildcard include/config/ring/buffer.h) \
-  include/linux/mm.h \
-    $(wildcard include/config/have/arch/mmap/rnd/bits.h) \
-    $(wildcard include/config/have/arch/mmap/rnd/compat/bits.h) \
-    $(wildcard include/config/arch/uses/high/vma/flags.h) \
-    $(wildcard include/config/ppc.h) \
-    $(wildcard include/config/parisc.h) \
-    $(wildcard include/config/metag.h) \
-    $(wildcard include/config/stack/growsup.h) \
-    $(wildcard include/config/device/private.h) \
-    $(wildcard include/config/device/public.h) \
-    $(wildcard include/config/shmem.h) \
-    $(wildcard include/config/have/memblock.h) \
-    $(wildcard include/config/debug/vm/rb.h) \
-    $(wildcard include/config/page/poisoning.h) \
-    $(wildcard include/config/debug/pagealloc.h) \
-    $(wildcard include/config/hibernation.h) \
-    $(wildcard include/config/hugetlbfs.h) \
-  include/linux/percpu-refcount.h \
-  include/linux/resource.h \
-  include/uapi/linux/resource.h \
-  arch/x86/include/uapi/asm/resource.h \
-  include/asm-generic/resource.h \
-  include/uapi/asm-generic/resource.h \
-  include/linux/page_ext.h \
-    $(wildcard include/config/idle/page/tracking.h) \
-  include/linux/stacktrace.h \
-    $(wildcard include/config/stacktrace.h) \
-    $(wildcard include/config/user/stacktrace/support.h) \
-  include/linux/stackdepot.h \
-  include/linux/page_ref.h \
-    $(wildcard include/config/debug/page/ref.h) \
-  include/linux/page-flags.h \
-    $(wildcard include/config/arch/uses/pg/uncached.h) \
-    $(wildcard include/config/memory/failure.h) \
-    $(wildcard include/config/swap.h) \
-    $(wildcard include/config/thp/swap.h) \
-    $(wildcard include/config/ksm.h) \
-  include/linux/memremap.h \
-  include/linux/ioport.h \
-  arch/x86/include/asm/pgtable.h \
-    $(wildcard include/config/debug/wx.h) \
-    $(wildcard include/config/have/arch/transparent/hugepage/pud.h) \
-    $(wildcard include/config/have/arch/soft/dirty.h) \
-    $(wildcard include/config/arch/enable/thp/migration.h) \
-  arch/x86/include/asm/pgtable_64.h \
-  include/asm-generic/pgtable.h \
-    $(wildcard include/config/have/arch/huge/vmap.h) \
-    $(wildcard include/config/x86/espfix64.h) \
-  include/linux/huge_mm.h \
-  include/linux/sched/coredump.h \
-    $(wildcard include/config/core/dump/default/elf/headers.h) \
-  include/linux/vmstat.h \
-    $(wildcard include/config/vm/event/counters.h) \
-    $(wildcard include/config/debug/tlbflush.h) \
-    $(wildcard include/config/debug/vm/vmacache.h) \
-  include/linux/vm_event_item.h \
-    $(wildcard include/config/memory/balloon.h) \
-    $(wildcard include/config/balloon/compaction.h) \
-  include/linux/seq_file.h \
   include/linux/cred.h \
     $(wildcard include/config/debug/credentials.h) \
+    $(wildcard include/config/keys.h) \
+  include/linux/key.h \
+  include/linux/assoc_array.h \
+    $(wildcard include/config/associative/array.h) \
   include/linux/selinux.h \
     $(wildcard include/config/security/selinux.h) \
   include/linux/sched.h \
@@ -834,6 +760,7 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
     $(wildcard include/config/arch/has/scaled/cputime.h) \
     $(wildcard include/config/virt/cpu/accounting/gen.h) \
     $(wildcard include/config/posix/timers.h) \
+    $(wildcard include/config/sysvipc.h) \
     $(wildcard include/config/detect/hung/task.h) \
     $(wildcard include/config/auditsyscall.h) \
     $(wildcard include/config/rt/mutexes.h) \
@@ -842,6 +769,7 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
     $(wildcard include/config/cpusets.h) \
     $(wildcard include/config/intel/rdt.h) \
     $(wildcard include/config/futex.h) \
+    $(wildcard include/config/perf/events.h) \
     $(wildcard include/config/task/delay/acct.h) \
     $(wildcard include/config/fault/injection.h) \
     $(wildcard include/config/latencytop.h) \
@@ -850,6 +778,17 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
     $(wildcard include/config/bcache.h) \
     $(wildcard include/config/vmap/stack.h) \
   include/uapi/linux/sched.h \
+  include/linux/sem.h \
+  include/uapi/linux/sem.h \
+  include/linux/ipc.h \
+  include/linux/rhashtable.h \
+  include/linux/jhash.h \
+  include/linux/unaligned/packed_struct.h \
+  include/linux/list_nulls.h \
+  include/uapi/linux/ipc.h \
+  arch/x86/include/uapi/asm/ipcbuf.h \
+  include/uapi/asm-generic/ipcbuf.h \
+  arch/x86/include/uapi/asm/sembuf.h \
   include/linux/shm.h \
   include/uapi/linux/shm.h \
   include/uapi/asm-generic/hugetlb_encode.h \
@@ -872,11 +811,29 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
     $(wildcard include/config/checkpoint/restore.h) \
   include/uapi/linux/seccomp.h \
   arch/x86/include/asm/seccomp.h \
+  arch/x86/include/asm/unistd.h \
+  arch/x86/include/uapi/asm/unistd.h \
+  arch/x86/include/generated/uapi/asm/unistd_64.h \
+  arch/x86/include/generated/asm/unistd_64_x32.h \
   arch/x86/include/asm/ia32_unistd.h \
   arch/x86/include/generated/asm/unistd_32_ia32.h \
   include/asm-generic/seccomp.h \
+  include/uapi/linux/unistd.h \
+  include/linux/resource.h \
+  include/uapi/linux/resource.h \
+  arch/x86/include/uapi/asm/resource.h \
+  include/asm-generic/resource.h \
+  include/uapi/asm-generic/resource.h \
   include/linux/latencytop.h \
   include/linux/sched/prio.h \
+  include/linux/signal_types.h \
+    $(wildcard include/config/old/sigaction.h) \
+  include/uapi/linux/signal.h \
+  arch/x86/include/asm/signal.h \
+  arch/x86/include/uapi/asm/signal.h \
+  include/uapi/asm-generic/signal-defs.h \
+  arch/x86/include/uapi/asm/siginfo.h \
+  include/uapi/asm-generic/siginfo.h \
   include/linux/task_io_accounting.h \
     $(wildcard include/config/task/io/accounting.h) \
   include/linux/sched/user.h \
@@ -884,6 +841,89 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
     $(wildcard include/config/posix/mqueue.h) \
     $(wildcard include/config/bpf/syscall.h) \
     $(wildcard include/config/net.h) \
+  include/linux/pinctrl/pinctrl-state.h \
+  include/linux/pm.h \
+    $(wildcard include/config/vt/console/sleep.h) \
+    $(wildcard include/config/pm/clk.h) \
+    $(wildcard include/config/pm/generic/domains.h) \
+  include/linux/ratelimit.h \
+  arch/x86/include/asm/device.h \
+    $(wildcard include/config/intel/iommu.h) \
+    $(wildcard include/config/amd/iommu.h) \
+    $(wildcard include/config/x86/dev/dma/ops.h) \
+    $(wildcard include/config/pci/domains.h) \
+  include/linux/pm_wakeup.h \
+  include/linux/syscalls.h \
+    $(wildcard include/config/ftrace/syscalls.h) \
+    $(wildcard include/config/old/sigsuspend.h) \
+    $(wildcard include/config/old/sigsuspend3.h) \
+    $(wildcard include/config/odd/rt/sigaction.h) \
+    $(wildcard include/config/clone/backwards.h) \
+    $(wildcard include/config/clone/backwards3.h) \
+  include/uapi/linux/aio_abi.h \
+  include/linux/signal.h \
+  include/trace/syscall.h \
+    $(wildcard include/config/have/syscall/tracepoints.h) \
+  include/linux/tracepoint.h \
+    $(wildcard include/config/tracepoint.h) \
+  include/linux/trace_events.h \
+    $(wildcard include/config/bpf/events.h) \
+  include/linux/ring_buffer.h \
+    $(wildcard include/config/ring/buffer/allow/swap.h) \
+    $(wildcard include/config/ring/buffer.h) \
+  include/linux/mm.h \
+    $(wildcard include/config/have/arch/mmap/rnd/bits.h) \
+    $(wildcard include/config/have/arch/mmap/rnd/compat/bits.h) \
+    $(wildcard include/config/arch/uses/high/vma/flags.h) \
+    $(wildcard include/config/ppc.h) \
+    $(wildcard include/config/parisc.h) \
+    $(wildcard include/config/metag.h) \
+    $(wildcard include/config/stack/growsup.h) \
+    $(wildcard include/config/device/private.h) \
+    $(wildcard include/config/device/public.h) \
+    $(wildcard include/config/shmem.h) \
+    $(wildcard include/config/have/memblock.h) \
+    $(wildcard include/config/debug/vm/rb.h) \
+    $(wildcard include/config/page/poisoning.h) \
+    $(wildcard include/config/debug/pagealloc.h) \
+    $(wildcard include/config/hibernation.h) \
+    $(wildcard include/config/hugetlbfs.h) \
+  include/linux/percpu-refcount.h \
+  include/linux/page_ext.h \
+    $(wildcard include/config/idle/page/tracking.h) \
+  include/linux/stacktrace.h \
+    $(wildcard include/config/stacktrace.h) \
+    $(wildcard include/config/user/stacktrace/support.h) \
+  include/linux/stackdepot.h \
+  include/linux/page_ref.h \
+    $(wildcard include/config/debug/page/ref.h) \
+  include/linux/page-flags.h \
+    $(wildcard include/config/arch/uses/pg/uncached.h) \
+    $(wildcard include/config/memory/failure.h) \
+    $(wildcard include/config/swap.h) \
+    $(wildcard include/config/thp/swap.h) \
+    $(wildcard include/config/ksm.h) \
+  include/linux/memremap.h \
+  arch/x86/include/asm/pgtable.h \
+    $(wildcard include/config/debug/wx.h) \
+    $(wildcard include/config/have/arch/transparent/hugepage/pud.h) \
+    $(wildcard include/config/have/arch/soft/dirty.h) \
+    $(wildcard include/config/arch/enable/thp/migration.h) \
+  arch/x86/include/asm/pgtable_64.h \
+  arch/x86/include/asm/pgtable-invert.h \
+  include/asm-generic/pgtable.h \
+    $(wildcard include/config/have/arch/huge/vmap.h) \
+    $(wildcard include/config/x86/espfix64.h) \
+  include/linux/huge_mm.h \
+  include/linux/sched/coredump.h \
+    $(wildcard include/config/core/dump/default/elf/headers.h) \
+  include/linux/vmstat.h \
+    $(wildcard include/config/vm/event/counters.h) \
+    $(wildcard include/config/debug/tlbflush.h) \
+    $(wildcard include/config/debug/vm/vmacache.h) \
+  include/linux/vm_event_item.h \
+    $(wildcard include/config/memory/balloon.h) \
+    $(wildcard include/config/balloon/compaction.h) \
   include/linux/poll.h \
   include/linux/uaccess.h \
   include/linux/kasan-checks.h \
@@ -907,49 +947,6 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
     $(wildcard include/config/irq/time/accounting.h) \
   include/linux/context_tracking_state.h \
     $(wildcard include/config/context/tracking.h) \
-  arch/x86/include/asm/hardirq.h \
-    $(wildcard include/config/x86/thermal/vector.h) \
-    $(wildcard include/config/x86/mce/threshold.h) \
-    $(wildcard include/config/x86/mce/amd.h) \
-    $(wildcard include/config/hyperv.h) \
-  include/linux/irq.h \
-    $(wildcard include/config/generic/irq/effective/aff/mask.h) \
-    $(wildcard include/config/generic/irq/ipi.h) \
-    $(wildcard include/config/irq/domain/hierarchy.h) \
-    $(wildcard include/config/generic/irq/migration.h) \
-    $(wildcard include/config/generic/pending/irq.h) \
-    $(wildcard include/config/hardirqs/sw/resend.h) \
-    $(wildcard include/config/generic/irq/legacy/alloc/hwirq.h) \
-    $(wildcard include/config/generic/irq/legacy.h) \
-  include/linux/irqhandler.h \
-  include/linux/irqreturn.h \
-  include/linux/irqnr.h \
-  include/uapi/linux/irqnr.h \
-  include/linux/io.h \
-  include/linux/slab.h \
-    $(wildcard include/config/debug/slab.h) \
-    $(wildcard include/config/failslab.h) \
-    $(wildcard include/config/have/hardened/usercopy/allocator.h) \
-    $(wildcard include/config/slab.h) \
-    $(wildcard include/config/slub.h) \
-  include/linux/kmemleak.h \
-  include/linux/kasan.h \
-  arch/x86/include/asm/irq.h \
-  arch/x86/include/asm/irq_regs.h \
-  include/linux/irqdesc.h \
-    $(wildcard include/config/irq/preflow/fasteoi.h) \
-    $(wildcard include/config/generic/irq/debugfs.h) \
-    $(wildcard include/config/sparse/irq.h) \
-    $(wildcard include/config/handle/domain/irq.h) \
-  arch/x86/include/asm/hw_irq.h \
-    $(wildcard include/config/hpet/timer.h) \
-    $(wildcard include/config/dmar/table.h) \
-    $(wildcard include/config/x86/uv.h) \
-    $(wildcard include/config/vmd.h) \
-  include/linux/profile.h \
-    $(wildcard include/config/profiling.h) \
-  arch/x86/include/asm/sections.h \
-  include/asm-generic/sections.h \
   include/linux/perf_event.h \
     $(wildcard include/config/have/hw/breakpoint.h) \
     $(wildcard include/config/function/tracer.h) \
@@ -1001,33 +998,9 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
   arch/x86/include/asm/user32.h \
   include/linux/cpu.h \
     $(wildcard include/config/pm/sleep/smp.h) \
+    $(wildcard include/config/hotplug/smt.h) \
   include/linux/node.h \
     $(wildcard include/config/memory/hotplug/sparse.h) \
-  include/linux/device.h \
-    $(wildcard include/config/debug/devres.h) \
-    $(wildcard include/config/generic/msi/irq/domain.h) \
-    $(wildcard include/config/pinctrl.h) \
-    $(wildcard include/config/generic/msi/irq.h) \
-    $(wildcard include/config/dma/cma.h) \
-    $(wildcard include/config/of.h) \
-    $(wildcard include/config/devtmpfs.h) \
-    $(wildcard include/config/sysfs/deprecated.h) \
-  include/linux/klist.h \
-  include/linux/pinctrl/devinfo.h \
-    $(wildcard include/config/pm.h) \
-  include/linux/pinctrl/consumer.h \
-  include/linux/pinctrl/pinctrl-state.h \
-  include/linux/pm.h \
-    $(wildcard include/config/vt/console/sleep.h) \
-    $(wildcard include/config/pm/clk.h) \
-    $(wildcard include/config/pm/generic/domains.h) \
-  include/linux/ratelimit.h \
-  arch/x86/include/asm/device.h \
-    $(wildcard include/config/intel/iommu.h) \
-    $(wildcard include/config/amd/iommu.h) \
-    $(wildcard include/config/x86/dev/dma/ops.h) \
-    $(wildcard include/config/pci/domains.h) \
-  include/linux/pm_wakeup.h \
   include/linux/cpuhotplug.h \
   include/linux/irq_work.h \
     $(wildcard include/config/irq/work.h) \
@@ -1052,6 +1025,12 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
     $(wildcard include/config/irq/forced/threading.h) \
     $(wildcard include/config/generic/irq/probe.h) \
     $(wildcard include/config/irq/timings.h) \
+  include/linux/irqreturn.h \
+  include/linux/irqnr.h \
+  include/uapi/linux/irqnr.h \
+  arch/x86/include/asm/irq.h \
+  arch/x86/include/asm/sections.h \
+  include/asm-generic/sections.h \
   include/linux/cgroup-defs.h \
   include/linux/u64_stats_sync.h \
   include/linux/bpf-cgroup.h \
@@ -1075,8 +1054,8 @@ deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o := \
   arch/x86/include/asm/cacheflush.h \
   include/asm-generic/cacheflush.h \
   include/linux/hugetlb_inline.h \
-  /home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.h \
+  /home/raj/Desktop/OSFall2018/crypt1.1/ioctl_basic.h \
 
-/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o: $(deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o)
+/home/raj/Desktop/OSFall2018/crypt1.1/ioctl_basic.o: $(deps_/home/raj/Desktop/OSFall2018/crypt1.1/ioctl_basic.o)
 
-$(deps_/home/luiz/Desktop/OSFall2018/crypt1.1/ioctl_basic.o):
+$(deps_/home/raj/Desktop/OSFall2018/crypt1.1/ioctl_basic.o):

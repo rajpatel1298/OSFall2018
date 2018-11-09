@@ -1,10 +1,13 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/types.h>
+#include <linux/kdev_t.h>
+#include <linux/slab.h>
+#include <linux/device.h>
 #include <linux/init.h>
 #include <linux/syscalls.h>
 #include <linux/fcntl.h>
 #include <linux/fs.h> // required for various structures related to files liked fops
-
 #include <linux/semaphore.h>
 #include <linux/cdev.h> 
 #include <linux/version.h>
@@ -14,10 +17,14 @@
 #include "ioctl_basic.h"    //ioctl header file
 #include <linux/gfp.h>
 
-static int Major;
 int currentId = 0;
 int createFlag = 0;
 device devices[10];
+
+static dev_t first; 
+static struct cdev c_dev;
+static struct class * deviceClass;
+
 
 
 int open(struct inode *inode, struct file *filp)
@@ -184,36 +191,20 @@ const char * fetch_create_string(char buf[]){ //0 = encrypt, 1 = decrypt
 
 }
 
+/*
+int make_device(int id){
+	
+}
+*/
+
 void create(unsigned long arg){
 
-	struct file * filp = NULL;
-	struct file * filp2 = NULL;
-        char encryptBuf[25] = "/dev/cryptEncrypt";
-	char decryptBuf[25] = "/dev/cryptDecrypt";
 	//Getting copy of the struct passed by user
 	argStruct kernStruct;
-	device newDevice;
 	argStruct * userStruct = (argStruct *)arg;
 	
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
 	
-	
-	filp = file_open(fetch_create_string(encryptBuf), O_RDWR | O_CREAT, S_IRWXU);
-	filp2 = file_open(fetch_create_string(decryptBuf), O_RDWR | O_CREAT, S_IRWXU);
-
-	if( filp && filp2) {
-		printk("Successfully created files...");
-		strcpy(newDevice.keyBuffer, kernStruct.keyBuffer);
-		newDevice.encryptFP = filp;
-		newDevice.decryptFP = filp2;
-		newDevice.id = currentId;
-		devices[currentId] = newDevice;
-		printk("Device struct saved");
-		kernStruct.flag = 1;
-		raw_copy_to_user(userStruct, &kernStruct, sizeof(argStruct));
-	} else {
-		printk("Error opening files...");
-	}
 	//At this point have a copy of user buffer in kernBuffer
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
 	
@@ -366,27 +357,30 @@ struct cdev *kernel_cdev;
 
 
 int char_arr_init (void) {
- int ret;
- dev_t dev_no,dev;
 
- kernel_cdev = cdev_alloc(); 
-  kernel_cdev->ops = &fops;
- kernel_cdev->owner = THIS_MODULE;
- printk (" Inside init module\n");
-  ret = alloc_chrdev_region( &dev_no , 0, 1,"char_arr_dev");
-    if (ret < 0) {
-  printk("Major number allocation is failed\n");
-  return ret; 
+ printk(KERN_INFO "LKM Registered");
+ if(alloc_chrdev_region(&first,0,1,"cryptctl") < 0){
+	return -1;
+ } 
+
+ if( (deviceClass = class_create(THIS_MODULE, "chardev")) == NULL){
+	unregister_chrdev_region(first,1);
+	return -1;
  }
+
+ if(device_create(deviceClass, NULL, first, NULL, "cryptctl") == NULL) {
+	class_destroy(deviceClass);
+	unregister_chrdev_region(first,1);
+	return -1;
+ }
+
+ cdev_init(&c_dev, &fops);
  
-    Major = MAJOR(dev_no);
-    dev = MKDEV(Major,0);
- printk (" The major number for your device is %d\n", Major);
- ret = cdev_add( kernel_cdev,dev,1);
- if(ret < 0 ) 
- {
- printk(KERN_INFO "Unable to allocate cdev");
- return ret;
+ if(cdev_add(&c_dev, first,1) == -1){
+	device_destroy(deviceClass,first);
+	class_destroy(deviceClass);
+	unregister_chrdev_region(first,1);
+	return -1;
  }
 
  return 0;
@@ -394,8 +388,10 @@ int char_arr_init (void) {
 
 void char_arr_cleanup(void) {
  printk(KERN_INFO " Inside cleanup_module\n");
- cdev_del(kernel_cdev);
- unregister_chrdev_region(Major, 1);
+ cdev_del(&c_dev);
+ device_destroy(deviceClass,first);
+ class_destroy(deviceClass);
+ unregister_chrdev_region(first,1);
 }
 MODULE_LICENSE("GPL"); 
 module_init(char_arr_init);
