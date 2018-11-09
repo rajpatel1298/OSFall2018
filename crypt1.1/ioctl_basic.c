@@ -12,6 +12,7 @@
 #include <asm/uaccess.h>
 #include <asm/segment.h>
 #include "ioctl_basic.h"    //ioctl header file
+#include <linux/gfp.h>
 
 static int Major;
 int currentId = 0;
@@ -86,14 +87,14 @@ char * cipher(char msg[], char key[]){
 
         int msgSize = strlen(msg)-1; //changed
         int keySize = strlen(key)-1; //changed
-
+	int i;
         char newKey[msgSize]; //msg + newKey = encrypted key
         char encryptedMsg[msgSize];
 	msg[msgSize] = '\0';
 	key[keySize] = '\0';
 
 	printk("Message %s. Key %s inside of cipher", msg, key);
-        int i;
+        
         for(i = 0; i < msgSize; i++){
                 newKey[i] = key[i % keySize];
         }
@@ -104,21 +105,22 @@ char * cipher(char msg[], char key[]){
 
         encryptedMsg[i] = '\0';
         strcpy(msg,encryptedMsg);
-
-        return msg;
+	char * ptr = kmalloc(strlen(msg)+1, 0);
+	strcpy(ptr,msg);
+        return ptr;
 }
 char * decipher (char msg[], char key[]){
        
         int msgSize = strlen(msg)-1;
         int keySize = strlen(key)-1;
-
+	int i;
         char newKey[msgSize]; //msg + newKey = encrypted key
         char decryptedMsg[msgSize];
 
 	msg[msgSize] = '\0';
 	key[keySize] = '\0';
 
-        int i;
+        
         for(i = 0; i < msgSize; i++){
                 newKey[i] = key[i % keySize];
         }
@@ -127,7 +129,9 @@ char * decipher (char msg[], char key[]){
                 decryptedMsg[i] = ((msg[i] - newKey[i] + 26) % 26) + 'A';
         }
         decryptedMsg[i] = '\0';
+	printk("BEFORE DECRYPTION: %s", msg);
         strcpy(msg,decryptedMsg);
+	printk("DECTRYPTED: %s", msg); 
         return msg;
 }
 
@@ -204,106 +208,128 @@ void destroy(unsigned long arg){
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
 }
 
-void encrypt(unsigned long arg){
-
+	void encrypt(unsigned long arg){
+	
 	//Getting copy of the struct passed by user
 	argStruct kernStruct;
 	argStruct * userStruct = (argStruct *)arg;
 	char * finalMessage;
 	int write;
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
-	
-	printk("Message Received: %s, Key Received: %s\n", kernStruct.messageBuffer, kernStruct.keyBuffer);
-	finalMessage = cipher(kernStruct.messageBuffer, kernStruct.keyBuffer);
-
-	printk("Final Message cipher %s\n", finalMessage);
-	if(devices[kernStruct.id].encryptFP) {
-        	write = file_write(devices[kernStruct.id].encryptFP, 0,finalMessage, strlen(finalMessage));
-	}
-	else {
-		printk("Null encrypt file pointer...");
-	}
-        printk("Wrote %d bytes into file", write);
-	//At this point have a copy of user buffer in kernBuffer
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
-}
+	printk(KERN_INFO "keyBuffer for device: %s", devices[kernStruct.id].keyBuffer);
 
-void decrypt(unsigned long arg){
+	int id = kernStruct.id;
 
-	//Getting copy of the struct passed by user
-	argStruct kernStruct;
-	argStruct * userStruct = (argStruct *)arg;
-	char * finalMessage;
-	int write;
-	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
+	strcpy(	devices[id].messageBuffer, kernStruct.messageBuffer);
 	
-	//At this point have a copy of user buffer in kernBuffer
-	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
-
-
-
-	//Do the decrpyt stuff
-
-	finalMessage = decipher(kernStruct.messageBuffer, kernStruct.keyBuffer);
-	write = file_write(devices[kernStruct.id].decryptFP,0,finalMessage, strlen(kernStruct.messageBuffer));
-
+	finalMessage = cipher(kernStruct.messageBuffer, devices[kernStruct.id].keyBuffer);
+	printk("After cipher() finalmessage = %s", finalMessage);
+	kernStruct.encryptedBuffer = finalMessage;
+	printk("After strcpy= %s", kernStruct.encryptedBuffer);
+	
+	write = file_write(devices[kernStruct.id].encryptFP, 0,finalMessage, strlen(kernStruct.messageBuffer));
+	
 	printk("Wrote %d bytes into file", write);
+	//At this point have a copy of user buffer in kernBuffer
+	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);
+	}
+	
+	void decrypt(unsigned long arg){
+	
+	//Getting copy of the struct passed by user
+	argStruct kernStruct;
+	argStruct * userStruct = (argStruct *)arg;
+	char * finalMessage;
+	int write;
+	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );	
+	
+	//At this point have a copy of user buffer in kernBuffer
+	printk(KERN_INFO "id for device: %d", kernStruct.id);
+	printk(KERN_INFO "keyBuffer for device: %s", devices[kernStruct.id].keyBuffer);
+	
+	
+	//Do the decrpyt stuff
+	printk("Before decipher called encryptedBuffer %s",devices[kernStruct.id].encryptedBuffer);
+	printk("MessgeBuffer %s", devices[kernStruct.id].messageBuffer);
+	finalMessage = decipher(devices[kernStruct.id].encryptedBuffer, devices[kernStruct.id].keyBuffer);
+	write = file_write(devices[kernStruct.id].decryptFP,0,finalMessage, strlen(kernStruct.messageBuffer));
+	
+	printk("Wrote %d bytes into file", write);
+	
+	
+	}
 
-	//Writing to the back to the user buffer
-	//Remember to change to the flag to 1 in order to let user no lkm is done
-	kernStruct.flag = 1;
-	raw_copy_to_user(userStruct, &kernStruct, sizeof(argStruct));
-}
+	void confg(unsigned long arg){
 
+		//Getting copy of the struct passed by user
+	argStruct kernStruct;
+	argStruct * userStruct = (argStruct *)arg;
+	
+	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
+	
+	printk(KERN_INFO "keyBuffer: %s",kernStruct.keyBuffer);
 
+	int id = kernStruct.id;
 
-static long my_ioctl(struct file *f, unsigned int cmd, unsigned long arg){
+	strcpy(	devices[id].keyBuffer, kernStruct.keyBuffer);
 
-int data=10,ret;
+	printk(KERN_INFO "keyBuffer for device: %s", devices[kernStruct.id].keyBuffer);
 
+	}
 
-
-switch(cmd) {
-
-case CREATE: 
- printk(KERN_INFO "CASE CREATE");
- create(arg);
- break;
-
-case DESTROY:
- printk(KERN_INFO "CASE DESTROY");
- destroy(arg);
- break;
-
-case ENCRYPT:
- printk(KERN_INFO "CASE ENCRYPT");
- encrypt(arg);
- break;
-
-case DECRYPT:
- printk(KERN_INFO "CASE DECRYPT");
- decrypt(arg);
- break;
-
-case 69:
- printk(KERN_INFO "CASE ENCRYPT");
- encrypt(arg);
- break;
-
-default:
- printk(KERN_INFO "DEF");
- } 
- 
-return ret;
- 
-}
+	static long my_ioctl(struct file *f, unsigned int cmd, unsigned long arg){
+	
+	int data=10,ret;
+	
+	
+	
+	switch(cmd) {
+	
+	case CREATE:
+	printk(KERN_INFO "CASE CREATE");
+	create(arg);
+	break;
+	
+	case DESTROY:
+	printk(KERN_INFO "CASE DESTROY");
+	destroy(arg);
+	break;
+	
+	case ENCRYPT:
+	printk(KERN_INFO "CASE ENCRYPT");
+	encrypt(arg);
+	break;
+	
+	case DECRYPT:
+	printk(KERN_INFO "CASE DECRYPT");
+	decrypt(arg);
+	break;
+	
+	case 69:
+	printk(KERN_INFO "CASE ENCRYPT");
+	encrypt(arg);
+	break;
+	
+	case 13:
+	printk(KERN_INFO "CASE CONF");
+	confg(arg);
+	break;
+	
+	default:
+	printk(KERN_INFO "DEF");
+	}
+	
+	return ret;
+	
+	}
 
 
 
 struct file_operations fops = {
- open:   open,
- unlocked_ioctl:   my_ioctl,
- release: release
+	open:   open,
+	unlocked_ioctl:   my_ioctl,
+	release: release
 };
 
 

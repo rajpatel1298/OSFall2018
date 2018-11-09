@@ -1,24 +1,26 @@
 #include <linux/ioctl.h>
-#define IOC_MAGIC 'k'
-#define IOCTL_HELLO _IO(IOC_MAGIC,0) 
-#define CREATE 0
-#define DESTROY 1
-#define ENCRYPT 2
-#define DECRYPT 3
-#define BUFFERSIZE 10
-
-typedef struct s{
+	#define IOC_MAGIC 'k'
+	#define IOCTL_HELLO _IO(IOC_MAGIC,0)
+	#define CREATE 0
+	#define DESTROY 1
+	#define ENCRYPT 2
+	#define DECRYPT 3
+	#define BUFFERSIZE 100
+	
+	typedef struct s{
 	char messageBuffer[BUFFERSIZE];
 	char keyBuffer[BUFFERSIZE];
+	char * encryptedBuffer;
 	int id;
 	int flag;
-} argStruct;
-
-typedef struct d {
+	} argStruct;
+	
+	typedef struct d {
 	char keyBuffer[BUFFERSIZE];
+	char messageBuffer[BUFFERSIZE];
+	char * encryptedBuffer;
 	int encryptFd;
 	struct file * encryptFP;
 	struct file * decryptFP;
 	int id;
-} device;
-
+	} device;
