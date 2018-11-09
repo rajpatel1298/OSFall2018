@@ -90,17 +90,36 @@ char * cipher(char msg[], char key[]){
 	int i;
         char newKey[msgSize]; //msg + newKey = encrypted key
         char encryptedMsg[msgSize];
-	msg[msgSize] = '\0';
-	key[keySize] = '\0';
+//	char encryptedMsgProper[msgSize];
+//	msg[msgSize] = '\0';
+//	key[keySize] = '\0';
 
 	printk("Message %s. Key %s inside of cipher", msg, key);
         
         for(i = 0; i < msgSize; i++){
-                newKey[i] = key[i % keySize];
+		if(key[i] >= 65 && key[i] <= 90){
+                	newKey[i] = key[i % keySize];
+		}else{ //turns the key captial if lowercase
+			key[i] -= 32;
+			newKey[i] = key[i % keySize];
+		}
         }
-
+	
         for(i = 0; i < msgSize; i++){
-                encryptedMsg[i] = ((msg[i] + newKey[i]) % 26) + 'A';
+		if(msg[i] >= 65 && msg[i] <= 90){
+                	encryptedMsg[i] = ((msg[i] + newKey[i]) % 26) + 'A';
+//			encryptedMsgProper[i] = ((msg[i] + newKey[i]) % 26) + 'A';
+			
+		}else{	
+			printk("msg[i] = %c",msg[i]);
+			
+			
+			msg[i] -= 32;
+			printk("msg[i]-32 = %c", msg[i]);			
+			encryptedMsg[i] = ((msg[i] + newKey[i]) % 26) + 'A' + 32;
+//			encryptedMsgProper[i] = ((msg[i] + newKey[i]) % 26) + 'A' + 32;
+			
+		}	
         }
 
         encryptedMsg[i] = '\0';
@@ -111,22 +130,32 @@ char * cipher(char msg[], char key[]){
 }
 char * decipher (char msg[], char key[]){
        
-        int msgSize = strlen(msg)-1;
+        int msgSize = strlen(msg);
         int keySize = strlen(key)-1;
 	int i;
         char newKey[msgSize]; //msg + newKey = encrypted key
         char decryptedMsg[msgSize];
 
-	msg[msgSize] = '\0';
-	key[keySize] = '\0';
+//	msg[msgSize] = '\0';
+//	key[keySize] = '\0';
 
         
         for(i = 0; i < msgSize; i++){
-                newKey[i] = key[i % keySize];
+                if(key[i] >= 65 && key[i] <= 90){
+                	newKey[i] = key[i % keySize];
+		}else{ //turns the key captial if lowercase
+			key[i] -= 32;
+			newKey[i] = key[i % keySize];
+		}
         }
 
         for(i = 0; i < msgSize; i++){
-                decryptedMsg[i] = ((msg[i] - newKey[i] + 26) % 26) + 'A';
+		if(msg[i] >= 65 && msg[i] <= 90){
+                	decryptedMsg[i] = ((msg[i] - newKey[i] + 26) % 26) + 'A';
+		}else{
+			msg[i] -= 32;
+			decryptedMsg[i] = ((msg[i] - newKey[i] + 26) % 26) + 'A' + 32;
+		}
         }
         decryptedMsg[i] = '\0';
 	printk("BEFORE DECRYPTION: %s", msg);
@@ -225,7 +254,7 @@ void destroy(unsigned long arg){
 	
 	finalMessage = cipher(kernStruct.messageBuffer, devices[kernStruct.id].keyBuffer);
 	printk("After cipher() finalmessage = %s", finalMessage);
-	kernStruct.encryptedBuffer = finalMessage;
+	devices[kernStruct.id].encryptedBuffer = finalMessage;
 	printk("After strcpy= %s", kernStruct.encryptedBuffer);
 	
 	write = file_write(devices[kernStruct.id].encryptFP, 0,finalMessage, strlen(kernStruct.messageBuffer));
