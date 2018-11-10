@@ -197,7 +197,7 @@ int make_device(char buf[]){
 
 	printk(KERN_INFO "Registering New Device...");
 
- 	if(device_create(deviceClass, NULL,MKDEV(MAJOR(first), currentId), NULL, fetch_create_string(buf)) == NULL) 	{
+ 	if(device_create(deviceClass, NULL,MKDEV(MAJOR(first), numDevices+1), NULL, fetch_create_string(buf)) == NULL) 	{
 		class_destroy(deviceClass);
 		cdev_del(&c_dev);
 		unregister_chrdev_region(first,numDevices);
@@ -383,6 +383,7 @@ struct cdev *kernel_cdev;
 int char_arr_init (void) {
 
  printk(KERN_INFO "LKM Registered");
+/*
  if(alloc_chrdev_region(&first,0,10,"cryptctl") < 0){
 	return -1;
  } 
@@ -403,6 +404,30 @@ int char_arr_init (void) {
  if(cdev_add(&c_dev, first,10) == -1){
 	device_destroy(deviceClass,first);
 	class_destroy(deviceClass);
+	unregister_chrdev_region(first,10);
+	return -1;
+ }
+ */
+
+
+ if(alloc_chrdev_region(&first,0,10,"cryptctl") < 0){
+	return -1;
+ }
+
+ cdev_init(&c_dev, &fops);
+ if( cdev_add(&c_dev, first, 10) < 0){
+	return -1;
+ } 
+
+ if( (deviceClass = class_create(THIS_MODULE, "chardrvr")) == NULL){
+	class_destroy(deviceClass);
+	unregister_chrdev_region(first, 10);
+	return -1;
+ }
+
+ if( device_create(deviceClass, NULL, MKDEV(MAJOR(first), 0), NULL, "cryptctl") == NULL) {
+	class_destroy(deviceClass);
+	cdev_del(&c_dev);
 	unregister_chrdev_region(first,10);
 	return -1;
  }
