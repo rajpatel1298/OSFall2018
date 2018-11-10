@@ -193,7 +193,7 @@
 	
 	int fd;
 	
-	fd = open("/dev/temp", O_RDWR);
+	fd = open("/dev/cryptctl", O_RDWR);
 	
 	if (fd == -1)
 	{

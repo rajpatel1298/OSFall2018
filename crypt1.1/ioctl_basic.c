@@ -194,7 +194,7 @@ int make_device(int id, char buf[]){
 		return -1;
  	}
 
- 	if(device_create(deviceClass, NULL, first, NULL, fetch_create_string(buf,id)) == NULL) 		{
+ 	if(device_create(deviceClass, NULL,first+id, NULL, fetch_create_string(buf,id)) == NULL) 		{
 		class_destroy(deviceClass);
 		unregister_chrdev_region(first,1);
 		printk(KERN_INFO "Registering New Device Failed.");
@@ -228,8 +228,11 @@ void create(unsigned long arg){
 	dev1 = make_device(kernStruct.id, encryptBuf);
 	dev2 = make_device(kernStruct.id, decryptBuf);
 
-	if(dev1 > 0 && dev2 > 0){
+	if(dev1 == 0 && dev2 == 0){
 		printk("Both devices succeeded in  creation");
+	}
+	else {
+		printk("Device registration failed");
 	}
 	
 	//At this point have a copy of user buffer in kernBuffer
