@@ -21,6 +21,7 @@ int currentId = 0;
 int createFlag = 0;
 device devices[10];
 
+int numDevices = 0;
 static dev_t first; 
 static struct cdev c_dev;
 static struct class * deviceClass;
@@ -171,46 +172,39 @@ char * decipher (char msg[], char key[]){
         return msg;
 }
 
-const char * fetch_create_string(char buf[], int id){ //0 = encrypt, 1 = decrypt
+const char * fetch_create_string(char buf[]){ //0 = encrypt, 1 = decrypt
 	
 	char idBuf [2];
-	idBuf[0] = id + '0'; //only cycles from 0-9, so can use ascii value to convert	
+	idBuf[0] = currentId + '0'; //only cycles from 0-9, so can use ascii value to convert	
 	idBuf[1] = '\0';
 	strcat(buf,idBuf);
+
+
+	if(createFlag == 2) {
+		currentId++;
+		if(currentId == 10){
+			currentId = 0;
+		}
+		createFlag = 0;
+	} else {
+		createFlag++;
+	}
 	return buf;
 }
 
 
-int make_device(int id, char buf[]){
+int make_device(char buf[]){
 
 	printk(KERN_INFO "Registering New Device...");
- 	if(alloc_chrdev_region(&first,0,1,fetch_create_string(buf,id)) < 0){
-		printk(KERN_INFO "Registering New Device Failed.");
-		return -1;
- 	} 
 
- 	if( (deviceClass = class_create(THIS_MODULE, fetch_create_string(buf,id))) == NULL){
-		unregister_chrdev_region(first,1);
-		return -1;
- 	}
-
- 	if(device_create(deviceClass, NULL,first+id, NULL, fetch_create_string(buf,id)) == NULL) 		{
+ 	if(device_create(deviceClass, NULL,MKDEV(MAJOR(first), currentId), NULL, fetch_create_string(buf)) == NULL) 	{
 		class_destroy(deviceClass);
-		unregister_chrdev_region(first,1);
+		cdev_del(&c_dev);
+		unregister_chrdev_region(first,numDevices);
 		printk(KERN_INFO "Registering New Device Failed.");
 		return -1;
  	}
-
- 	cdev_init(&c_dev, NULL);
- 
- 	if(cdev_add(&c_dev, first,1) == -1){
-		device_destroy(deviceClass,first);
-		class_destroy(deviceClass);
-		unregister_chrdev_region(first,1);
-		printk(KERN_INFO "Registering New Device Failed.");
-		return -1;
- 	}
-	 printk(KERN_INFO "Registering New Device Succeeded.");
+	 numDevices++;
 	 return 0;	
 }
 
@@ -225,8 +219,8 @@ void create(unsigned long arg){
 	int dev1,dev2;
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
 	
-	dev1 = make_device(kernStruct.id, encryptBuf);
-	dev2 = make_device(kernStruct.id, decryptBuf);
+	dev1 = make_device(encryptBuf);
+	dev2 = make_device(decryptBuf);
 
 	if(dev1 == 0 && dev2 == 0){
 		printk("Both devices succeeded in  creation");
@@ -389,27 +383,27 @@ struct cdev *kernel_cdev;
 int char_arr_init (void) {
 
  printk(KERN_INFO "LKM Registered");
- if(alloc_chrdev_region(&first,0,1,"cryptctl") < 0){
+ if(alloc_chrdev_region(&first,0,10,"cryptctl") < 0){
 	return -1;
  } 
 
  if( (deviceClass = class_create(THIS_MODULE, "chardev")) == NULL){
-	unregister_chrdev_region(first,1);
+	unregister_chrdev_region(first,10);
 	return -1;
  }
 
  if(device_create(deviceClass, NULL, first, NULL, "cryptctl") == NULL) {
 	class_destroy(deviceClass);
-	unregister_chrdev_region(first,1);
+	unregister_chrdev_region(first,10);
 	return -1;
  }
 
  cdev_init(&c_dev, &fops);
  
- if(cdev_add(&c_dev, first,1) == -1){
+ if(cdev_add(&c_dev, first,10) == -1){
 	device_destroy(deviceClass,first);
 	class_destroy(deviceClass);
-	unregister_chrdev_region(first,1);
+	unregister_chrdev_region(first,10);
 	return -1;
  }
 
