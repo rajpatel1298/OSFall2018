@@ -8,7 +8,7 @@ To get this to run do:
 
 	-dmesg ( remember the major number that dmesg spits out should on the last line )
 	
-	-mknod /dev/temp c {the major number} 0
+	-mknod /dev/crpytctl c {the major number} 0
 
 	-./user_app
 

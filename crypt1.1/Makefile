@@ -17,7 +17,7 @@ clean:
 	rmmod ioctl_basic.ko
 	rm user_app 
 	rm ioctl_basic.ko
-	rm /dev/temp
+	rm /dev/cryptctl
 	
 
 user:

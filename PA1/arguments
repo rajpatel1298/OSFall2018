@@ -1,1 +1,0 @@
-./mapred --app sort --impl procs --maps 2 --reduces 5 --input sort_input.csv --output output.txt
