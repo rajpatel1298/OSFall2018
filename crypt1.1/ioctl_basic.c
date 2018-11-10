@@ -171,39 +171,66 @@ char * decipher (char msg[], char key[]){
         return msg;
 }
 
-const char * fetch_create_string(char buf[]){ //0 = encrypt, 1 = decrypt
+const char * fetch_create_string(char buf[], int id){ //0 = encrypt, 1 = decrypt
 	
-	char id [2];
-	id[0] = currentId + '0'; //only cycles from 0-9, so can use ascii value to convert	
-	id[1] = '\0';
-	strcat(buf,id);
-
-	if(createFlag == 2){
-		currentId++;
-		if(currentId == 10){
-			currentId = 0;
-		}
-		createFlag = 0;
-	} else {
-		createFlag++;
-	}
+	char idBuf [2];
+	idBuf[0] = id + '0'; //only cycles from 0-9, so can use ascii value to convert	
+	idBuf[1] = '\0';
+	strcat(buf,idBuf);
 	return buf;
-
 }
 
-/*
-int make_device(int id){
-	
+
+int make_device(int id, char buf[]){
+
+	printk(KERN_INFO "Registering New Device...");
+ 	if(alloc_chrdev_region(&first,0,1,fetch_create_string(buf,id)) < 0){
+		printk(KERN_INFO "Registering New Device Failed.");
+		return -1;
+ 	} 
+
+ 	if( (deviceClass = class_create(THIS_MODULE, fetch_create_string(buf,id))) == NULL){
+		unregister_chrdev_region(first,1);
+		return -1;
+ 	}
+
+ 	if(device_create(deviceClass, NULL, first, NULL, fetch_create_string(buf,id)) == NULL) 		{
+		class_destroy(deviceClass);
+		unregister_chrdev_region(first,1);
+		printk(KERN_INFO "Registering New Device Failed.");
+		return -1;
+ 	}
+
+ 	cdev_init(&c_dev, NULL);
+ 
+ 	if(cdev_add(&c_dev, first,1) == -1){
+		device_destroy(deviceClass,first);
+		class_destroy(deviceClass);
+		unregister_chrdev_region(first,1);
+		printk(KERN_INFO "Registering New Device Failed.");
+		return -1;
+ 	}
+	 printk(KERN_INFO "Registering New Device Succeeded.");
+	 return 0;	
 }
-*/
+
 
 void create(unsigned long arg){
 
 	//Getting copy of the struct passed by user
 	argStruct kernStruct;
 	argStruct * userStruct = (argStruct *)arg;
-	
+	char encryptBuf[25] = "/dev/cryptEncrypt";
+	char decryptBuf[25] = "/dev/cryptDecrypt";
+	int dev1,dev2;
 	raw_copy_from_user(&kernStruct,userStruct, sizeof(argStruct) );
+	
+	dev1 = make_device(kernStruct.id, encryptBuf);
+	dev2 = make_device(kernStruct.id, decryptBuf);
+
+	if(dev1 > 0 && dev2 > 0){
+		printk("Both devices succeeded in  creation");
+	}
 	
 	//At this point have a copy of user buffer in kernBuffer
 	printk(KERN_INFO "messageBuffer: %s",kernStruct.messageBuffer);

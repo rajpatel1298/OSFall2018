@@ -556,15 +556,9 @@ deps_/home/raj/Desktop/OSFall2018/crypt1.1/ioctl_basic.mod.o := \
   include/linux/rbtree.h \
   arch/x86/include/uapi/asm/vsyscall.h \
   include/asm-generic/fixmap.h \
-  arch/x86/include/asm/hardirq.h \
-    $(wildcard include/config/kvm/intel.h) \
-    $(wildcard include/config/have/kvm.h) \
-    $(wildcard include/config/x86/thermal/vector.h) \
-    $(wildcard include/config/x86/mce/threshold.h) \
-    $(wildcard include/config/x86/mce/amd.h) \
-    $(wildcard include/config/hyperv.h) \
   arch/x86/include/asm/io_apic.h \
   arch/x86/include/asm/irq_vectors.h \
+    $(wildcard include/config/have/kvm.h) \
     $(wildcard include/config/pci/msi.h) \
   include/linux/topology.h \
     $(wildcard include/config/use/percpu/numa/node/id.h) \
