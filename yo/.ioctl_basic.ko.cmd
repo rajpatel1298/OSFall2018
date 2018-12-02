@@ -1,0 +1,1 @@
+cmd_/home/luiz/Desktop/yo/ioctl_basic.ko := ld -r -m elf_x86_64 -z max-page-size=0x200000 -T ./scripts/module-common.lds --build-id  -o /home/luiz/Desktop/yo/ioctl_basic.ko /home/luiz/Desktop/yo/ioctl_basic.o /home/luiz/Desktop/yo/ioctl_basic.mod.o ;  true
