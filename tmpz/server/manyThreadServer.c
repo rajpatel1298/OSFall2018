@@ -79,6 +79,16 @@ int main(int argc , char *argv[])
     return 0;
 }
 
+char* path = "./";
+
+void get_attr(char* buffer){
+
+
+     //send struct to user
+     printf("new path: %s\n", buffer); 
+
+}
+
 /*
  * This will handle connection for each client
  * */
@@ -96,12 +106,31 @@ void *connection_handler(void *socket_desc)
      test->some = 3;
 
     int valread = read( sock,client_message, 1024); 
+
+    char* pathz = (char*)malloc( sizeof(char) * 100);
+    memcpy(pathz,path, strlen(path) );
      
-     client_message[5] = '\0';
-     printf("client_message: %s\n",client_message);
+    strcat(pathz,client_message + 3);
+          
+
+
+
+     ////client_message[5] = '\0';
+     //printf("client_message: %s\n",client_message);
+    if(  (client_message[0] == '0') && (client_message[1] == '0') ){
+         get_attr(pathz);
+          }
+    
+    
+     
+
 
      //send(sock , "yo from server", 14 , 0 ); 
      send(sock , (void*)test, sizeof(Attr) , 0 ); 
+
+    
+
+
     if(read_size == 0)
     {
         puts("Client disconnected");
