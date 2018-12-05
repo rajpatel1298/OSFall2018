@@ -1,5 +1,6 @@
 #define FUSE_USE_VERSION 30
 
+#include "ssfs.h"
 #include <fuse.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -80,11 +81,15 @@ static int do_readdir( const char *path, void *buffer, fuse_fill_dir_t filler, o
 	return 0;
 }
 
+static int do_open(const char * path, struct fuse_file_info * fp){
+    
+}
 
 
 static struct fuse_operations operations = {
     .getattr	= do_getattr,
-    .readdir	= do_readdir
+    .readdir	= do_readdir,
+    // .open       = do_open
     //.read		= do_read,
 };
 
