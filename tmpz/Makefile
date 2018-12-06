@@ -3,7 +3,7 @@ FILESYSTEM_FILES = ssfs.c
 
 build: $(FILESYSTEM_FILES)
 	$(COMPILER) $(FILESYSTEM_FILES) -o ssfs `pkg-config fuse --cflags --libs`
-	echo 'To Mount: ./ssfs -f /tmp/mounty'
+	echo 'To Mount: ./ssfs -f /tmp/mo'
 
 clean:
 	rm ssfs

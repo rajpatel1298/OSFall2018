@@ -1,6 +1,5 @@
 #define FUSE_USE_VERSION 30
 
-#include "ssfs.h"
 #include <fuse.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -12,93 +11,11 @@
 #include <netinet/in.h> 
 #define PORT 8080 
 
-int sock = 0, valread; 
 
-static int do_getattr( const char *path, struct stat *st )
-{
-	printf( "[getattr] Called\n" );
-	printf( "\tAttributes of %s requested\n", path );
-	
-	// GNU's definitions of the attributes (http://www.gnu.org/software/libc/manual/html_node/Attribute-Meanings.html):
-	// 		st_uid: 	The user ID of the file’s owner.
-	//		st_gid: 	The group ID of the file.
-	//		st_atime: 	This is the last access time for the file.
-	//		st_mtime: 	This is the time of the last modification to the contents of the file.
-	//		st_mode: 	Specifies the mode of the file. This includes file type information (see Testing File Type) and the file permission bits (see Permission Bits).
-	//		st_nlink: 	The number of hard links to the file. This count keeps track of how many directories have entries for this file. If the count is ever decremented to zero, then the file itself is discarded as soon 
-	//						as no process still holds it open. Symbolic links are not counted in the total.
-	//		st_size:	This specifies the size of a regular file in bytes. For files that are really devices this field isn’t usually meaningful. For symbolic links this specifies the length of the file name the link refers to.
-	
-	st->st_uid = getuid(); // The owner of the file/directory is the user who mounted the filesystem
-	st->st_gid = getgid(); // The group of the file/directory is the same as the group of the user who mounted the filesystem
-	st->st_atime = time( NULL ); // The last "a"ccess of the file/directory is right now
-	st->st_mtime = time( NULL ); // The last "m"odification of the file/directory is right now
-	
-	if ( strcmp( path, "/" ) == 0 )
-	{
-		st->st_mode = S_IFDIR | 0755;
-		st->st_nlink = 2; // Why "two" hardlinks instead of "one"? The answer is here: http://unix.stackexchange.com/a/101536
-	}
-	else
-	{
-		st->st_mode = S_IFREG | 0644;
-		st->st_nlink = 1;
-		st->st_size = 1024;
-	}
-	
-	return 0;
-}
+int get_sock(){
 
-static int do_readdir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi )
-{
-
-    char *hello = "Hello from client"; 
-    char buff[1024] = {0}; 
-    send(sock , hello , strlen(hello) , 0 ); 
-    printf("Hello message sent\n"); 
-    valread = read( sock , buff, 1024); 
-    printf("%s\n",buff ); 
-    filler(buffer,buff, NULL,0);
-
-
-/*
-	printf( "--> Getting The List of Files of %s\n", path );
-     //   filler( buffer, ".", NULL, 0 ); // Current Directory
-	//filler( buffer, "..", NULL, 0 ); // Parent Directory
-        filler( buffer, "file1", NULL, 0 ); // Current Directory
-	filler( buffer, "file2", NULL, 0 ); // Parent Directory
-*/
-	/*
-	filler( buffer, ".", NULL, 0 ); // Current Directory
-	filler( buffer, "..", NULL, 0 ); // Parent Directory
-	
-	if ( strcmp( path, "/" ) == 0 ) // If the user is trying to show the files/directories of the root directory show the following
-	{
-		filler( buffer, "file54", NULL, 0 );
-		filler( buffer, "file349", NULL, 0 );
-	}
-	*/
-	return 0;
-}
-
-static int do_open(const char * path, struct fuse_file_info * fp){
-    
-}
-
-
-static struct fuse_operations operations = {
-    .getattr	= do_getattr,
-    .readdir	= do_readdir,
-    // .open       = do_open
-    //.read		= do_read,
-};
-
-int main( int argc, char *argv[] )
-{
-
-struct sockaddr_in address; 
-    
-    struct sockaddr_in serv_addr; 
+   int sock;
+   struct sockaddr_in serv_addr; 
     
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     { 
@@ -123,6 +40,167 @@ struct sockaddr_in address;
         printf("\nConnection Failed \n"); 
         return -1; 
     } 
+
+ return sock;
+}
+static int do_getattr( const char *path, struct stat *st )
+{
+    int sock = get_sock();
+    int valread;
+
+    char* pathz = (char*)malloc( sizeof(char) * 100);
+
+    char* functionNum = "00";
+    memcpy(pathz,functionNum, strlen(functionNum) );
+    strcat(pathz,path);
+  
+   
+
+
+    printf("pathz for get_attr: %s\n",pathz);  
+ 
+    
+
+
+    send(sock , pathz , strlen(pathz) , 0 ); 
+    printf("path sent\n"); 
+
+
+
+
+    //valread = read( sock , attrStruct, sizeof(attrStruct)); 
+    char gidBuff[100];
+    char uidBuff[100];
+    char mtimeBuff[100];
+    char atimeBuff[100];
+    char modeBuff[100];
+    char nlinkBuff[100];
+    char sizeBuff[100];
+
+    valread = read( sock , gidBuff, 100);
+    printf("gidBuff: %s\n",gidBuff);
+    int gid = atoi(gidBuff);
+    
+    send(sock , "0" , strlen("0") , 0 ); 
+   
+    valread = read( sock , uidBuff, 100);
+    printf("uidBuff: %s\n",uidBuff);
+    int uid = atoi(uidBuff);
+    
+    send(sock , "0" , strlen("0") , 0 ); 
+
+    valread = read( sock , mtimeBuff, 100);
+    printf("mtimeBuff: %s\n",mtimeBuff);
+    int mtime = atoi(mtimeBuff);
+    
+    send(sock , "0" , strlen("0") , 0 ); 
+
+    valread = read( sock , atimeBuff, 100);
+    printf("atimeBuff: %s\n",atimeBuff);
+    int atime = atoi(atimeBuff);
+    
+    send(sock , "0" , strlen("0") , 0 ); 
+
+   
+
+    valread = read( sock , nlinkBuff, 100);
+    printf("nlinkBuff: %s\n",nlinkBuff);
+    int nlink = atoi(nlinkBuff);
+
+    send(sock , "0" , strlen("0") , 0 ); 
+
+    valread = read( sock , sizeBuff, 100);
+    printf("sizeBuff: %s\n",sizeBuff);
+    int size = atoi(sizeBuff);
+   
+    send(sock , "0" , strlen("0") , 0 ); 
+
+    valread = read( sock , modeBuff, 100);
+    printf("modeBuff: %s\n",modeBuff);
+    int mode = atoi(modeBuff);
+    
+  
+    printf("finished reading valread: %d\n",valread);
+
+    st->st_gid = (gid_t)gid;
+    st->st_uid = (uid_t)uid;
+    st->st_mtime = (time_t)mtime;
+    st->st_atime = (time_t)atime;
+    st->st_mode = (mode_t)mode;
+    st->st_nlink = (nlink_t)nlink;
+   
+    if(size != -1  ){
+         st->st_size = (off_t)size;
+                }
+
+     printf("finsihed get_attr\n");
+
+	return 0;
+ 
+
+}
+
+static int do_readdir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi )
+{
+   printf("entering do_readdir the og path: %s\n",path);
+   int valread;
+   int sock = get_sock();
+
+  
+   // char* functionNum = "01";
+    char* functionNum = (char*)malloc( sizeof(char)*3);
+    functionNum[0] = '0';
+    functionNum[1] = '1';
+    functionNum[2] = '\0';
+
+    char buff[1024] = {0}; 
+    char* pathz = (char*)malloc( sizeof(char) * 100);
+
+    memcpy(pathz,functionNum, strlen(functionNum) );
+    strcat(pathz,path);
+  
+    printf("pathz for do_readdir: %s\n",pathz); 
+     
+  
+    send(sock , pathz , strlen(pathz) , 0 ); 
+  /*
+    valread = read( sock , buff, 1024); 
+    printf("server sent this for do_readdir: %s\n",buff ); 
+    filler(buffer,buff, NULL,0);
+*/
+
+   while(1){
+
+    char Buff[100] = {0};
+
+    valread = read( sock , Buff, 100);
+    printf("Buff: %s\n",Buff);
+    
+    if(Buff[0] == '1'){break;}
+    filler(buffer,Buff,NULL,0);
+    
+    send(sock , "0" , strlen("0") , 0 ); 
+
+         }
+
+
+	return 0;
+}
+
+
+
+static struct fuse_operations operations = {
+    .getattr	= do_getattr,
+    .readdir	= do_readdir
+    //.read		= do_read,
+};
+
+int main( int argc, char *argv[] )
+{
+
+struct sockaddr_in address; 
+    
+    
     
 
 	return fuse_main( argc, argv, &operations, NULL );
