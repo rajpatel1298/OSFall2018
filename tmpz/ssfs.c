@@ -9,8 +9,18 @@
 #include <stdlib.h>
 #include <sys/socket.h> 
 #include <netinet/in.h> 
-#define PORT 8080 
+#include <errno.h>
+#define PORT 8863 
 
+char *my_itoa(int num, char *str)
+{
+        if(str == NULL)
+        {
+                return NULL;
+        }
+        sprintf(str, "%d", num);
+        return str;
+}
 
 int get_sock(){
 
@@ -45,15 +55,36 @@ int get_sock(){
 }
 static int do_getattr( const char *path, struct stat *st )
 {
+
+   if(path[1] == 'l'){
+    printf("entered the forbinn dir returning -ENOENT\n");
+    return -ENOENT;    }
+
+
     int sock = get_sock();
     int valread;
+    printf("the OG path for getattr: %s\n",path);
 
-    char* pathz = (char*)malloc( sizeof(char) * 100);
-
+   // char* pathz = (char*)malloc( sizeof(char) * 25);
+    char pathz[25] = {0};
     char* functionNum = "00";
-    memcpy(pathz,functionNum, strlen(functionNum) );
-    strcat(pathz,path);
-  
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '0';
+    pathz[1] = '0';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){pathz[i] = '\0';
+       break;}
+}
+
+
    
 
 
@@ -69,33 +100,34 @@ static int do_getattr( const char *path, struct stat *st )
 
 
     //valread = read( sock , attrStruct, sizeof(attrStruct)); 
-    char gidBuff[100];
-    char uidBuff[100];
-    char mtimeBuff[100];
-    char atimeBuff[100];
-    char modeBuff[100];
-    char nlinkBuff[100];
-    char sizeBuff[100];
+    char gidBuff[25];
+    char uidBuff[25];
+    char mtimeBuff[25];
+    char atimeBuff[25];
+    char modeBuff[25];
+    char nlinkBuff[25];
+    char sizeBuff[25];
 
-    valread = read( sock , gidBuff, 100);
+    valread = read( sock , gidBuff, 25);
     printf("gidBuff: %s\n",gidBuff);
     int gid = atoi(gidBuff);
     
     send(sock , "0" , strlen("0") , 0 ); 
+
    
-    valread = read( sock , uidBuff, 100);
+    valread = read( sock , uidBuff, 25);
     printf("uidBuff: %s\n",uidBuff);
     int uid = atoi(uidBuff);
     
     send(sock , "0" , strlen("0") , 0 ); 
 
-    valread = read( sock , mtimeBuff, 100);
+    valread = read( sock , mtimeBuff, 25);
     printf("mtimeBuff: %s\n",mtimeBuff);
     int mtime = atoi(mtimeBuff);
     
     send(sock , "0" , strlen("0") , 0 ); 
 
-    valread = read( sock , atimeBuff, 100);
+    valread = read( sock , atimeBuff, 25);
     printf("atimeBuff: %s\n",atimeBuff);
     int atime = atoi(atimeBuff);
     
@@ -103,19 +135,19 @@ static int do_getattr( const char *path, struct stat *st )
 
    
 
-    valread = read( sock , nlinkBuff, 100);
+    valread = read( sock , nlinkBuff, 25);
     printf("nlinkBuff: %s\n",nlinkBuff);
     int nlink = atoi(nlinkBuff);
 
     send(sock , "0" , strlen("0") , 0 ); 
 
-    valread = read( sock , sizeBuff, 100);
+    valread = read( sock , sizeBuff, 25);
     printf("sizeBuff: %s\n",sizeBuff);
     int size = atoi(sizeBuff);
    
     send(sock , "0" , strlen("0") , 0 ); 
 
-    valread = read( sock , modeBuff, 100);
+    valread = read( sock , modeBuff, 25);
     printf("modeBuff: %s\n",modeBuff);
     int mode = atoi(modeBuff);
     
@@ -148,16 +180,35 @@ static int do_readdir( const char *path, void *buffer, fuse_fill_dir_t filler, o
 
   
    // char* functionNum = "01";
-    char* functionNum = (char*)malloc( sizeof(char)*3);
-    functionNum[0] = '0';
-    functionNum[1] = '1';
-    functionNum[2] = '\0';
+  //  char* functionNum = (char*)malloc( sizeof(char)*3);
+    //functionNum[0] = '0';
+    //functionNum[1] = '1';
+    //functionNum[2] = '\0';
 
-    char buff[1024] = {0}; 
-    char* pathz = (char*)malloc( sizeof(char) * 100);
+    char buff[25] = {0}; 
+    //char* pathz = (char*)malloc( sizeof(char) * 25);
 
-    memcpy(pathz,functionNum, strlen(functionNum) );
-    strcat(pathz,path);
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+     char pathz[25] = {0};
+    //char* functionNum = "00";
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '0';
+    pathz[1] = '1';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){
+       pathz[i] = '\0';
+       break;}
+}
+
   
     printf("pathz for do_readdir: %s\n",pathz); 
      
@@ -171,9 +222,9 @@ static int do_readdir( const char *path, void *buffer, fuse_fill_dir_t filler, o
 
    while(1){
 
-    char Buff[100] = {0};
+    char Buff[25] = {0};
 
-    valread = read( sock , Buff, 100);
+    valread = read( sock , Buff, 25);
     printf("Buff: %s\n",Buff);
     
     if(Buff[0] == '1'){break;}
@@ -187,11 +238,65 @@ static int do_readdir( const char *path, void *buffer, fuse_fill_dir_t filler, o
 	return 0;
 }
 
+static int do_mkdir(const char * path , mode_t mode){
 
+
+    printf("entering do_mkdir the og path: %s\n",path);
+   int valread;
+   int sock = get_sock();
+
+    char buff[25] = {0}; 
+    //char* pathz = (char*)malloc( sizeof(char) * 25);
+
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+     char pathz[25] = {0};
+    //char* functionNum = "00";
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '1';
+    pathz[1] = '1';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){
+       pathz[i] = '\0';
+       break;}
+}
+
+  
+    printf("pathz for do_mkdir: %s\n",pathz); 
+    send(sock , pathz , strlen(pathz) , 0 ); 
+
+
+   char dummyBuff[25] = {0};
+
+   valread = read( sock , dummyBuff, 25);
+  
+   char modeBuff[25] = {0};
+
+   my_itoa((int)mode,modeBuff);
+   printf("modeBuff: %s\n",modeBuff);
+   send(sock,modeBuff,25,0);
+  
+
+   char retBuff[25] = {0};
+   valread = read( sock , retBuff, 25);
+
+	return 0;
+
+
+}
 
 static struct fuse_operations operations = {
     .getattr	= do_getattr,
-    .readdir	= do_readdir
+    .readdir	= do_readdir,
+    .mkdir      = do_mkdir
     //.read		= do_read,
 };
 

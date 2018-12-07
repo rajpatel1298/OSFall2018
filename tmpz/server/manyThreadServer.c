@@ -60,7 +60,7 @@ int main(int argc , char *argv[])
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8080 );
+    server.sin_port = htons( 8863 );
      
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -72,7 +72,7 @@ int main(int argc , char *argv[])
     puts("bind done");
      
     //Listen
-    listen(socket_desc , 3);
+    listen(socket_desc , 5);
      
     //Accept and incoming connection
     puts("Waiting for incoming connections...");
@@ -113,13 +113,13 @@ char* path = "./mount";
 void get_attr(char* buffer,int sock){
 
    
-   char gidBuff[100];
-   char uidBuff[100];
-   char mtimeBuff[100];
-   char atimeBuff[100];
-   char modeBuff[100];
-   char nlinkBuff[100];
-   char sizeBuff[100];
+   char gidBuff[25];
+   char uidBuff[25];
+   char mtimeBuff[25];
+   char atimeBuff[25];
+   char modeBuff[25];
+   char nlinkBuff[25];
+   char sizeBuff[25];
    int valread;
 
    uid_t uid = getuid();
@@ -190,32 +190,32 @@ void get_attr(char* buffer,int sock){
 	}
 
     
-    char dummyBuff[100];
+    char dummyBuff[25] = {0};
 
     my_itoa((int)gid,gidBuff);
     printf("gidBuff: %s\n",gidBuff);
-    send(sock,gidBuff,100,0);
+    send(sock,gidBuff,25,0);
     valread = read( sock , dummyBuff, 10);
 
     my_itoa((int)uid,uidBuff);
     printf("uidBuff: %s\n",uidBuff);
-    send(sock,uidBuff,100,0);
+    send(sock,uidBuff,25,0);
     valread = read( sock , dummyBuff, 10);
     
     my_itoa((int)mtime,mtimeBuff);
     printf("mtimeBuff: %s\n",mtimeBuff);
-    send(sock,mtimeBuff,100,0);
+    send(sock,mtimeBuff,25,0);
     valread = read( sock , dummyBuff, 10);
 
     my_itoa((int)atime,atimeBuff);
     printf("atimeBuff: %s\n",atimeBuff);
-    send(sock,atimeBuff,100,0);
+    send(sock,atimeBuff,25,0);
     valread = read( sock , dummyBuff, 10);
     
 
     my_itoa((int)nlink,nlinkBuff);
     printf("nlinkBuff: %s\n",nlinkBuff);
-    send(sock,nlinkBuff,100,0);
+    send(sock,nlinkBuff,25,0);
     valread = read( sock , dummyBuff, 10);
 
 
@@ -223,14 +223,14 @@ void get_attr(char* buffer,int sock){
 
     my_itoa((int)size,sizeBuff);
     printf("sizeBuff: %s\n",sizeBuff);
-    send(sock,sizeBuff,100,0);
+    send(sock,sizeBuff,25,0);
     valread = read( sock , dummyBuff, 10);
 
 
 
     my_itoa((int)mode,modeBuff);
     printf("modeBuff: %s\n",modeBuff);
-    send(sock,modeBuff,100,0);
+    send(sock,modeBuff,25,0);
     //valread = read( sock , dummyBuff, 10);
 
 	
@@ -240,7 +240,8 @@ void get_attr(char* buffer,int sock){
 
 void get_dir(char* buffer, int sock){
      int valread;
-     char * pathz = (char*)malloc(sizeof(char) * 100 );
+     //char * pathz// = (char*)malloc(sizeof(char) * 100 );
+     char pathz[25] = {0};
      int i = 0;
      while(1){
          pathz[i] = path[i];
@@ -262,20 +263,27 @@ void get_dir(char* buffer, int sock){
      printf("in the server get_dir\n");
      printf("pathz: %s \n",pathz);
 
-    char dummyBuff[100];
+    char dummyBuff[25] = {0};
     DIR * dirp;
     struct dirent * dp;
 
     dirp = opendir(pathz);  
 
     errno = 0;
+    
     while ( (dp = readdir(dirp)) != NULL ) { 
+
+        char fileName[25] = {0};
+
         if (dp->d_type == DT_REG) { //currently reading a file, so index it
-                send(sock,dp->d_name, strlen(dp->d_name),0 );  
+                strcpy(fileName, dp->d_name);
+                send(sock,fileName, 25,0 );  
                 valread = read( sock , dummyBuff, 10);            
                 
         } else if (dp->d_type == DT_DIR) {
-                send(sock,dp->d_name, strlen(dp->d_name),0 );
+                strcpy(fileName, dp->d_name);
+                send(sock,fileName, 25,0 ); 
+                //send(sock,dp->d_name, strlen(dp->d_name),0 );
                 valread = read( sock , dummyBuff, 10);
             } 
                                             }
@@ -283,10 +291,61 @@ void get_dir(char* buffer, int sock){
 
      //char * test = "file1";
      //send(sock, test,strlen(test), 0);
-     send(sock,"1", strlen("1"),0 );
-
+     char dummy[25] = {0};
+     strcpy(dummy,"1");
+     //send(sock,"1", strlen("1"),0 );
+     send(sock,dummy, 25,0 );
+ 
      printf("\n\n");
 }
+
+void mk_dir(char* buffer, int sock){
+     int valread;
+     //char * pathz// = (char*)malloc(sizeof(char) * 100 );
+     char pathz[25] = {0};
+     int i = 0;
+     while(1){
+         pathz[i] = path[i];
+         i++;
+         if ( path[i] == '\0'){break;}
+              }
+     int j = 0;
+
+     while(1){
+         pathz[i] = buffer[j];
+         i++;
+         j++;
+         if(buffer[j] == '\0'){
+            pathz[i] = '\0';
+            break;}
+             }
+     
+
+     printf("in the server mk_dir\n");
+     printf("pathz: %s \n",pathz);
+
+     char dummyBuffer[25] = {0};
+     dummyBuffer[0] = '1';
+     send(sock,dummyBuffer,25,0);
+
+
+     int mode = 0;
+     char modeBuff[25] = {0};
+     valread = read( sock , modeBuff, 25);
+     printf("modeBuff string: %s\n",modeBuff);
+     mode = atoi(modeBuff);
+     printf("mode int: %d\n",mode);
+
+     int ret = mkdir(pathz, (mode_t)mode);
+     
+    
+     char retBuff[25] = {0};
+     my_itoa(ret,retBuff);
+     printf("retBuff: %s\n",retBuff);
+     send(sock,retBuff,25,0);
+     
+}
+
 
 /*
  * This will handle connection for each client
@@ -296,13 +355,16 @@ void *connection_handler(void *socket_desc)
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
     int read_size;
-    char *message , client_message[2000];
-
+    //char *message , client_message[2000];
+    char* message;
+    char client_message[25] = {0};
     
 
-    int valread = read( sock,client_message, 1024); 
+   // int valread = read( sock,client_message, 1024); 
 
-    char* pathz = (char*)malloc( sizeof(char) * 100);
+    int valread = read( sock,client_message, 25); 
+
+    char* pathz = (char*)malloc( sizeof(char) * 25);
     memcpy(pathz,path, strlen(path) );
      
     strcat(pathz,client_message + 2);
@@ -322,7 +384,10 @@ void *connection_handler(void *socket_desc)
           }
     
      
-
+    if(  (client_message[0] == '1') && (client_message[1] == '1') ){
+         printf("message before cat for mk_dir: %s\n",client_message);
+         mk_dir(client_message + 2, sock);
+          }
 
      //send(sock , "yo from server", 14 , 0 ); 
     
