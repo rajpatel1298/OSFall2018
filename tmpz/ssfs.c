@@ -55,11 +55,11 @@ int get_sock(){
 }
 static int do_getattr( const char *path, struct stat *st )
 {
-
+/*
    if(path[1] == 'l'){
     printf("entered the forbinn dir returning -ENOENT\n");
     return -ENOENT;    }
-
+*/
 
     int sock = get_sock();
     int valread;
@@ -96,17 +96,23 @@ static int do_getattr( const char *path, struct stat *st )
     send(sock , pathz , strlen(pathz) , 0 ); 
     printf("path sent\n"); 
 
+    char checkBuff[25] = {0};
+    valread = read(sock,checkBuff,25);
+    int check = atoi(checkBuff);
 
+    if (check == -1){
+       printf("bad check\n");
+       return -ENOENT;    }
 
 
     //valread = read( sock , attrStruct, sizeof(attrStruct)); 
-    char gidBuff[25];
-    char uidBuff[25];
-    char mtimeBuff[25];
-    char atimeBuff[25];
-    char modeBuff[25];
-    char nlinkBuff[25];
-    char sizeBuff[25];
+    char gidBuff[25] = {0};
+    char uidBuff[25] = {0};
+    char mtimeBuff[25] = {0};
+    char atimeBuff[25] = {0};
+    char modeBuff[25] = {0};
+    char nlinkBuff[25] = {0};
+    char sizeBuff[25] = {0};
 
     valread = read( sock , gidBuff, 25);
     printf("gidBuff: %s\n",gidBuff);

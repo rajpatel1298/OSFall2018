@@ -112,6 +112,24 @@ char* path = "./mount";
 
 void get_attr(char* buffer,int sock){
 
+
+    int  sta;
+   struct stat bu;
+   sta = stat(buffer, &bu);
+   if(sta != 0 ) {
+      char failBuff[25] = {0};
+      my_itoa(-1,failBuff);
+      printf("stat could not find file/dir in get_attr\n");
+      send(sock,failBuff,25,0);
+                 }
+
+    else{  
+      char goodBuff[25] = {0};
+      my_itoa(1,goodBuff);
+  
+      send(sock,goodBuff,25,0);  }
+   
+ 
    
    char gidBuff[25];
    char uidBuff[25];
