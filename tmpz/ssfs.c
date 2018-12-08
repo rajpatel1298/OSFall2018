@@ -298,11 +298,114 @@ static int do_mkdir(const char * path , mode_t mode){
 
 
 }
+static int do_releasedir(const char * path ,  struct fuse_file_info * st){
+
+
+    printf("entering do_releasedir the og path: %s\n",path);
+   int valread;
+   int sock = get_sock();
+
+    char buff[25] = {0}; 
+    //char* pathz = (char*)malloc( sizeof(char) * 25);
+
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+     char pathz[25] = {0};
+    //char* functionNum = "00";
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '0';
+    pathz[1] = '2';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){
+       pathz[i] = '\0';
+       break;}
+}
+
+  
+    printf("pathz for do_release: %s\n",pathz); 
+    send(sock , pathz , strlen(pathz) , 0 ); 
+
+
+    char retBuff[25] = {0};
+    valread = read( sock , retBuff, 25);
+    int ret = atoi(retBuff);
+	//return 0;
+    printf("ret values for real_dir ret: %d\n",ret);
+    if (ret == 0){
+        return 0;
+        }
+     else{return (ret*-1); }
+
+  return ret;
+
+}
+
+static int do_opendir(const char * path ,  struct fuse_file_info * st){
+
+
+   printf("entering do_opendir the og path: %s\n",path);
+   int valread;
+   int sock = get_sock();
+
+    char buff[25] = {0}; 
+    //char* pathz = (char*)malloc( sizeof(char) * 25);
+
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+     char pathz[25] = {0};
+    //char* functionNum = "00";
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '1';
+    pathz[1] = '2';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){
+       pathz[i] = '\0';
+       break;}
+}
+
+  
+    printf("pathz for do_opendir: %s\n",pathz); 
+    send(sock , pathz , strlen(pathz) , 0 ); 
+
+
+    char retBuff[25] = {0};
+    valread = read( sock , retBuff, 25);
+    int ret = atoi(retBuff);
+    printf("ret: %d\n",ret);
+
+    if(ret == 0){
+       return 0; }
+
+    else{
+      return (ret*-1);  }
+	//return 0;
+  //return ret;
+
+}
 
 static struct fuse_operations operations = {
     .getattr	= do_getattr,
     .readdir	= do_readdir,
-    .mkdir      = do_mkdir
+    .mkdir      = do_mkdir,
+    .opendir    = do_opendir,
+    .releasedir = do_releasedir
+    
     //.read		= do_read,
 };
 

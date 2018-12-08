@@ -13,6 +13,85 @@
 #include <sys/stat.h>
 #include <fcntl.h>
  
+typedef struct t_dirNode {
+   DIR* dirp;
+   int id;
+   struct t_dirNode* next;
+
+   char* pathway;
+
+} dirNode;
+
+dirNode* head = NULL;
+int idCount = 0;
+void add(dirNode* node){
+ 
+      if (head == NULL){
+          node->next = NULL;
+          head = node;
+          return;
+       }
+
+   dirNode* ptr;
+  // for(ptr = head; ptr->next != NULL; ptr = ptr->next){
+    //        if(ptr->next == NULL){
+      //           ptr->next = node;
+        //          return; }  }
+   ptr = node;
+   ptr->next = head;
+   head = ptr;
+}
+
+DIR* getDIR(char* path){
+   printf("path for getDIr: %s\n",path);
+   dirNode* ptr;
+   for(ptr = head; ptr != NULL; ptr = ptr->next){
+         
+           if(strcmp(ptr->pathway,path) == 0 ){
+               return ptr->dirp;
+                }
+    }
+  printf("returning NULL for getDir\n");
+  return NULL;
+ 
+
+}
+
+int delete(char* path){
+   errno = 0;
+   int ret = -1;
+   int retz = -1;
+
+   if(head == NULL){
+     printf("DID NOT FREE\n");
+     return 2;
+     }
+
+   dirNode* ptr;
+   if( strcmp(head->pathway,path) == 0 ){
+      ptr = head->next;
+      
+      errno = 0;
+      int ret = closedir(head->dirp);
+      retz = errno;
+      head = ptr;
+      printf("successfull free ret: %d\n",ret);
+      return retz;
+      }
+  
+  dirNode* ptw;
+  for(ptr = head, ptw = head->next; ptr->next != NULL ;ptr = ptr->next, ptw = ptw->next){
+       if( strcmp(ptw->pathway,path) == 0){
+            ptr->next = ptw->next;
+            errno = 0;
+            int ret = closedir(ptw->dirp);
+            retz = errno;
+            printf("successfull free ret: %d\n",ret);
+            return retz;}  }
+
+     printf("DID NOT FREE\n");  
+  return 2;
+}
 
 char *my_itoa(int num, char *str)
 {
@@ -256,7 +335,7 @@ void get_attr(char* buffer,int sock){
   printf("\n\n");
 }
 
-void get_dir(char* buffer, int sock){
+void read_dir(char* buffer, int sock){
      int valread;
      //char * pathz// = (char*)malloc(sizeof(char) * 100 );
      char pathz[25] = {0};
@@ -278,15 +357,15 @@ void get_dir(char* buffer, int sock){
              }
      
 
-     printf("in the server get_dir\n");
+     printf("in the server read_dir\n");
      printf("pathz: %s \n",pathz);
 
     char dummyBuff[25] = {0};
     DIR * dirp;
     struct dirent * dp;
 
-    dirp = opendir(pathz);  
-
+   // dirp = opendir(pathz);  
+    dirp = getDIR(pathz); /////
     errno = 0;
     
     while ( (dp = readdir(dirp)) != NULL ) { 
@@ -365,6 +444,111 @@ void mk_dir(char* buffer, int sock){
 }
 
 
+void real_dir(char* buffer, int sock){
+     int valread;
+     //char * pathz// = (char*)malloc(sizeof(char) * 100 );
+     char pathz[25] = {0};
+     int i = 0;
+     while(1){
+         pathz[i] = path[i];
+         i++;
+         if ( path[i] == '\0'){break;}
+              }
+     int j = 0;
+
+     while(1){
+         pathz[i] = buffer[j];
+         i++;
+         j++;
+         if(buffer[j] == '\0'){
+            pathz[i] = '\0';
+            break;}
+             }
+     
+
+     printf("in the server real_dir\n");
+     printf("pathz: %s \n",pathz);
+      
+     
+     //int rv = remove(pathz);
+     int rv = delete(pathz);
+     printf("real_dir rv: %d\n",rv);
+    // printf("real_dir errno: %d\n",errno);
+
+        
+
+     char retBuff[25] = {0};
+     my_itoa(rv,retBuff);
+     printf("retBuff: %s\n",retBuff);
+     send(sock,retBuff,25,0);
+     
+}
+
+void open_dir(char* buffer, int sock){
+     int valread;
+     //char * pathz// = (char*)malloc(sizeof(char) * 100 );
+     char pathz[25] = {0};
+     int i = 0;
+     while(1){
+         pathz[i] = path[i];
+         i++;
+         if ( path[i] == '\0'){break;}
+              }
+     int j = 0;
+
+     while(1){
+         pathz[i] = buffer[j];
+         i++;
+         j++;
+         if(buffer[j] == '\0'){
+            pathz[i] = '\0';
+            break;}
+             }
+     
+
+     printf("in the server open_dir\n");
+     printf("pathz: %s \n",pathz);
+
+     errno = 0;
+
+     DIR * dirp = NULL;
+   
+     dirp = opendir(pathz); 
+
+     if(dirp == NULL){
+
+      char retBuff[25] = {0};
+      my_itoa(errno,retBuff);
+      printf("retBuff: %s\n",retBuff);
+      send(sock,retBuff,25,0);
+      return;
+      }
+
+
+     dirNode* node = (dirNode*)malloc(sizeof(dirNode) );
+     node->id = idCount;
+     idCount ++;
+     node->dirp = dirp;
+   
+     char * pa = (char*)malloc( sizeof(char) * (strlen(pathz) + 1) );    
+     node->pathway = pa;
+
+     strcpy(node->pathway, pathz);
+     add(node);
+
+     printf("pathway for node: %s \n", node->pathway );
+     //int rv = remove(pathz);
+    
+     char retBuff[25] = {0};
+     my_itoa(0,retBuff);
+     printf("retBuff: %s\n",retBuff);
+     send(sock,retBuff,25,0);
+     
+}
+
+
+
+
 /*
  * This will handle connection for each client
  * */
@@ -396,16 +580,27 @@ void *connection_handler(void *socket_desc)
          get_attr(pathz, sock);
           }
 
-    if(  (client_message[0] == '0') && (client_message[1] == '1') ){
-         printf("message before cat for get_dir: %s\n",client_message);
-         get_dir(client_message + 2, sock);
+    else if(  (client_message[0] == '0') && (client_message[1] == '1') ){
+         printf("message before cat for read_dir: %s\n",client_message);
+         read_dir(client_message + 2, sock);
           }
     
      
-    if(  (client_message[0] == '1') && (client_message[1] == '1') ){
+    else if(  (client_message[0] == '1') && (client_message[1] == '1') ){
          printf("message before cat for mk_dir: %s\n",client_message);
          mk_dir(client_message + 2, sock);
           }
+
+    else if(  (client_message[0] == '0') && (client_message[1] == '2') ){
+         printf("message before cat for real_dir: %s\n",client_message);
+         real_dir(client_message + 2, sock);
+          } 
+   else if(  (client_message[0] == '1') && (client_message[1] == '2') ){
+         printf("message before cat for open_dir: %s\n",client_message);
+         open_dir(client_message + 2, sock);
+          }
+
+   
 
      //send(sock , "yo from server", 14 , 0 ); 
     
