@@ -194,17 +194,21 @@ void get_attr(char* buffer,int sock){
 
     int  sta;
    struct stat bu;
+   errno = 0;
    sta = stat(buffer, &bu);
+   int rv = errno;
    if(sta != 0 ) {
+  
       char failBuff[25] = {0};
-      my_itoa(-1,failBuff);
+      my_itoa(rv,failBuff);
       printf("stat could not find file/dir in get_attr\n");
       send(sock,failBuff,25,0);
+      return;
                  }
 
     else{  
       char goodBuff[25] = {0};
-      my_itoa(1,goodBuff);
+      my_itoa(0,goodBuff);
   
       send(sock,goodBuff,25,0);  }
    
@@ -546,6 +550,169 @@ void open_dir(char* buffer, int sock){
      
 }
 
+void handle_open(char* buffer, int socket){
+    
+
+    int valread;
+     //char * pathz// = (char*)malloc(sizeof(char) * 100 );
+     char pathz[25] = {0};
+     int i = 0;
+     while(1){
+         pathz[i] = path[i];
+         i++;
+         if ( path[i] == '\0'){break;}
+              }
+     int j = 0;
+
+     while(1){
+         pathz[i] = buffer[j];
+         i++;
+         j++;
+         if(buffer[j] == '\0'){
+            pathz[i] = '\0';
+            break;}
+             }
+     
+
+     printf("in the server handle open\n");
+     printf("pathz: %s \n",pathz);
+     char dummyBuff[25] = {0};
+    
+     send(socket,dummyBuff, 25, 0);
+
+   
+    char fdReturn[20] = {0};
+
+    
+    //wait to receive flags
+    char flagStr[25];
+    read(socket,flagStr,25);
+   int flags = atoi(flagStr);
+   int check = open(pathz,flags);
+        
+    if( check < 0) {
+        my_itoa(-1, fdReturn); 
+       
+        send(socket,fdReturn,strlen(fdReturn), 0);
+        //printf("Server failed to open file %s\n", finalPath);
+
+       //in this case, errno is set, so send that back to the client
+        char err[20];
+        my_itoa(errno, err);
+        send(socket, err, strlen(err), 0);
+    }
+    else {
+        printf("fd: %d\n",check); 
+        my_itoa(check, fdReturn);
+      
+        send(socket,fdReturn,strlen(fdReturn), 0);
+       // printf("Server opened file %s\n", finalPath);
+    }
+}
+
+void handle_create(char* buffer , int socket){
+
+    
+    int valread;
+     //char * pathz// = (char*)malloc(sizeof(char) * 100 );
+     char pathz[25] = {0};
+     int i = 0;
+     while(1){
+         pathz[i] = path[i];
+         i++;
+         if ( path[i] == '\0'){break;}
+              }
+     int j = 0;
+
+     while(1){
+         pathz[i] = buffer[j];
+         i++;
+         j++;
+         if(buffer[j] == '\0'){
+            pathz[i] = '\0';
+            break;}
+             }
+     
+
+     printf("in the server handle create\n");
+     printf("pathz: %s \n",pathz);
+
+
+    //char * pathMessage = "Received path from client";
+       char dummyBuff[25] = {0};
+       dummyBuff[0] = 'g';
+       dummyBuff[1] = '\0';
+    
+     send(socket,dummyBuff, 25, 0);
+    //send(socket,pathMessage,strlen(pathMessage),0);
+    
+
+
+}
+
+void handle_truncate(char* buffer , int socket){
+    int valread;
+     //char * pathz// = (char*)malloc(sizeof(char) * 100 );
+     char pathz[25] = {0};
+     int i = 0;
+     while(1){
+         pathz[i] = path[i];
+         i++;
+         if ( path[i] == '\0'){break;}
+              }
+     int j = 0;
+
+     while(1){
+         pathz[i] = buffer[j];
+         i++;
+         j++;
+         if(buffer[j] == '\0'){
+            pathz[i] = '\0';
+            break;}
+             }
+     
+
+     printf("in the server handle truncate\n");
+     printf("pathz: %s \n",pathz);
+
+ ////write dummy
+ char dummyBuff[25] = {0};
+       dummyBuff[0] = 'g';
+       dummyBuff[1] = '\0';
+    
+     send(socket,dummyBuff, 25, 0);
+    //wait to receive offset
+    char flagStr[20] = {0};
+    read(socket,flagStr,20);
+    printf("flagStr: %s \n",flagStr);
+   int offInt = atoi(flagStr);
+    printf("offINt: %d \n",offInt);
+    off_t offSet = (off_t)offInt;
+     printf("offSet: %u \n",offInt);
+    
+
+
+    int check = truncate(pathz,offSet);
+       char ret[5] = {0};
+    if( check < 0) {
+        my_itoa(-1, ret); 
+        send(socket,ret,strlen(ret), 0);
+        //printf("Server failed to truncate file %s\n", finalPath);
+
+       //in this case, errno is set, so send that back to the client
+        char err[20] = {0};
+        my_itoa(errno, err);
+        send(socket, err, strlen(err), 0);
+    }
+    else {
+        my_itoa(0, ret);
+        send(socket,ret,strlen(ret), 0);
+        //printf("Server truncated file %s\n", finalPath);
+    }
+}
+
+
+
 
 
 
@@ -600,7 +767,19 @@ void *connection_handler(void *socket_desc)
          open_dir(client_message + 2, sock);
           }
 
-   
+   else if(  (client_message[0] == '2') && (client_message[1] == '2') ){
+         printf("message before cat for open: %s\n",client_message);
+         handle_open(client_message + 2, sock);
+          }
+   else if(  (client_message[0] == '0') && (client_message[1] == '3') ){
+         printf("message before cat for create: %s\n",client_message);
+         handle_create(client_message + 2, sock);
+          }
+
+   else if(  (client_message[0] == '1') && (client_message[1] == '3') ){
+         printf("message before cat for truncate: %s\n",client_message);
+         handle_truncate(client_message + 2, sock);
+          }
 
      //send(sock , "yo from server", 14 , 0 ); 
     

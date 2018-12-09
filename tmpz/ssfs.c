@@ -100,9 +100,9 @@ static int do_getattr( const char *path, struct stat *st )
     valread = read(sock,checkBuff,25);
     int check = atoi(checkBuff);
 
-    if (check == -1){
+    if (check != 0){//
        printf("bad check\n");
-       return -ENOENT;    }
+       return (check* -1);    }
 
 
     //valread = read( sock , attrStruct, sizeof(attrStruct)); 
@@ -398,13 +398,190 @@ static int do_opendir(const char * path ,  struct fuse_file_info * st){
   //return ret;
 
 }
+static int do_open(const char * path, struct fuse_file_info * fp){
+  
+    
+    printf("entering do_open the og path: %s\n",path);
+   int valread;
+   int sock = get_sock();
+
+    char buff[25] = {0}; 
+    //char* pathz = (char*)malloc( sizeof(char) * 25);
+
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+     char pathz[25] = {0};
+    //char* functionNum = "00";
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '2';
+    pathz[1] = '2';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){
+       pathz[i] = '\0';
+       break;}
+}
+
+
+    printf("pathz for do_open: %s\n",pathz); 
+    send(sock , pathz , strlen(pathz) , 0 ); 
+ int valread2;
+    char dummyBuff[25] = {0};
+    valread2 = read(sock,dummyBuff,25);
+   
+
+   
+     char flagStr[25] = {0};
+     //send the flags 
+     my_itoa(fp->flags, flagStr);
+     send(sock,flagStr, strlen(flagStr), 0);
+        
+     printf("Sent an open command with path %s and flags %d\n", path, fp->flags); 
+
+     //return the file handle
+     char buff2[20] = {0};
+     valread2 = read(sock, buff2, 20);
+     printf("Returned fd: %s\n",buff2);
+     
+     
+     if( (atoi(buff2)) != -1) {
+        return 0;
+     }
+     else {
+         printf("else\n");
+         char receiveErr[20] = {0};
+         valread2 = read(sock,receiveErr, 20);
+         printf("Received errno: %d\n", atoi(receiveErr));
+         return -atoi(receiveErr);
+     }
+}
+
+
+static int do_create(const char * path, mode_t mode, struct fuse_file_info * fp){
+
+      printf("entering do_create the og path: %s\n",path);
+   int valread2;
+   int sock = get_sock();
+
+    char buff[25] = {0}; 
+    //char* pathz = (char*)malloc( sizeof(char) * 25);
+
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+     char pathz[25] = {0};
+    //char* functionNum = "00";
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '0';
+    pathz[1] = '3';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){
+       pathz[i] = '\0';
+       break;}
+}
+
+
+    printf("pathz for do_create: %s\n",pathz); 
+    send(sock , pathz , strlen(pathz) , 0 );
+
+
+    //need to send mode
+    printf("Client is sending this mode: %d\n", mode);    
+   char buff2[25] = {0};
+     valread2 = read(sock, buff2, 25);
+     printf("Returned mess from server: %s\n",buff2);
+}
+
+static int do_truncate(const char * path, off_t offset){
+
+       printf("entering do_truncate the og path: %s\n",path);
+   int valread;
+   int sock = get_sock();
+
+    char buff[25] = {0}; 
+    //char* pathz = (char*)malloc( sizeof(char) * 25);
+
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+     char pathz[25] = {0};
+    //char* functionNum = "00";
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '1';
+    pathz[1] = '3';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){
+       pathz[i] = '\0';
+       break;}
+}
+
+    printf("pathz for do_truncate: %s\n",pathz); 
+    send(sock , pathz , strlen(pathz) , 0 );
+
+
+
+   //read  dummy
+     int valread2;
+    char dummyBuff[25] = {0};
+    valread2 = read(sock,dummyBuff,25);
+
+
+  //send offset
+     char off[20];
+       my_itoa((int)offset, off);
+     printf("string off: %s\n",off);
+     send(sock,off, strlen(off), 0);  
+     printf("offSet: %u \n",offset);
+     printf("offSetInt: %d \n",(int)offset );  
+
+    printf("Sent an truncate command with path %s and offset %d\n", path, (int)offset); 
+
+     //return the result
+     char buff2[5] = {0};
+     valread2 = read(sock, buff2, 5);
+     printf("Truncate returned: %s\n",buff2);
+     
+     if( (atoi(buff2)) != -1) {
+        return 0;
+     }
+     else {
+         char receiveErr[20] = {0};
+         valread2 = read(sock,receiveErr, 20);
+         printf("Received errno: %d\n", atoi(receiveErr));
+         return -atoi(receiveErr);
+     }
+}
 
 static struct fuse_operations operations = {
     .getattr	= do_getattr,
     .readdir	= do_readdir,
     .mkdir      = do_mkdir,
     .opendir    = do_opendir,
-    .releasedir = do_releasedir
+    .releasedir = do_releasedir,
+    .open       = do_open,
+    .create     = do_create,
+    .truncate   = do_truncate
     
     //.read		= do_read,
 };
