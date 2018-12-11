@@ -59,7 +59,6 @@ DIR* getDIR(char* path){
 
 int delete(char* path){
    errno = 0;
-   int ret = -1;
    int retz = -1;
 
    if(head == NULL){
@@ -221,8 +220,7 @@ void get_attr(char* buffer,int sock){
    char modeBuff[25];
    char nlinkBuff[25];
    char sizeBuff[25];
-   int valread;
-
+  
    uid_t uid = getuid();
    gid_t gid = getgid();
    mode_t mode;
@@ -296,28 +294,28 @@ void get_attr(char* buffer,int sock){
     my_itoa((int)gid,gidBuff);
     printf("gidBuff: %s\n",gidBuff);
     send(sock,gidBuff,25,0);
-    valread = read( sock , dummyBuff, 10);
+    read( sock , dummyBuff, 10);
 
     my_itoa((int)uid,uidBuff);
     printf("uidBuff: %s\n",uidBuff);
     send(sock,uidBuff,25,0);
-    valread = read( sock , dummyBuff, 10);
+    read( sock , dummyBuff, 10);
     
     my_itoa((int)mtime,mtimeBuff);
     printf("mtimeBuff: %s\n",mtimeBuff);
     send(sock,mtimeBuff,25,0);
-    valread = read( sock , dummyBuff, 10);
+    read( sock , dummyBuff, 10);
 
     my_itoa((int)atime,atimeBuff);
     printf("atimeBuff: %s\n",atimeBuff);
     send(sock,atimeBuff,25,0);
-    valread = read( sock , dummyBuff, 10);
+    read( sock , dummyBuff, 10);
     
 
     my_itoa((int)nlink,nlinkBuff);
     printf("nlinkBuff: %s\n",nlinkBuff);
     send(sock,nlinkBuff,25,0);
-    valread = read( sock , dummyBuff, 10);
+    read( sock , dummyBuff, 10);
 
 
    
@@ -325,7 +323,7 @@ void get_attr(char* buffer,int sock){
     my_itoa((int)size,sizeBuff);
     printf("sizeBuff: %s\n",sizeBuff);
     send(sock,sizeBuff,25,0);
-    valread = read( sock , dummyBuff, 10);
+    read( sock , dummyBuff, 10);
 
 
 
@@ -340,7 +338,6 @@ void get_attr(char* buffer,int sock){
 }
 
 void read_dir(char* buffer, int sock){
-     int valread;
      //char * pathz// = (char*)malloc(sizeof(char) * 100 );
      char pathz[25] = {0};
      int i = 0;
@@ -379,13 +376,13 @@ void read_dir(char* buffer, int sock){
         if (dp->d_type == DT_REG) { //currently reading a file, so index it
                 strcpy(fileName, dp->d_name);
                 send(sock,fileName, 25,0 );  
-                valread = read( sock , dummyBuff, 10);            
+                read( sock , dummyBuff, 10);            
                 
         } else if (dp->d_type == DT_DIR) {
                 strcpy(fileName, dp->d_name);
                 send(sock,fileName, 25,0 ); 
                 //send(sock,dp->d_name, strlen(dp->d_name),0 );
-                valread = read( sock , dummyBuff, 10);
+                read( sock , dummyBuff, 10);
             } 
                                             }
      
@@ -401,7 +398,7 @@ void read_dir(char* buffer, int sock){
 }
 
 void mk_dir(char* buffer, int sock){
-     int valread;
+   
      //char * pathz// = (char*)malloc(sizeof(char) * 100 );
      char pathz[25] = {0};
      int i = 0;
@@ -432,7 +429,7 @@ void mk_dir(char* buffer, int sock){
 
      int mode = 0;
      char modeBuff[25] = {0};
-     valread = read( sock , modeBuff, 25);
+     read( sock , modeBuff, 25);
      printf("modeBuff string: %s\n",modeBuff);
      mode = atoi(modeBuff);
      printf("mode int: %d\n",mode);
@@ -449,7 +446,7 @@ void mk_dir(char* buffer, int sock){
 
 
 void real_dir(char* buffer, int sock){
-     int valread;
+
      //char * pathz// = (char*)malloc(sizeof(char) * 100 );
      char pathz[25] = {0};
      int i = 0;
@@ -489,7 +486,6 @@ void real_dir(char* buffer, int sock){
 }
 
 void open_dir(char* buffer, int sock){
-     int valread;
      //char * pathz// = (char*)malloc(sizeof(char) * 100 );
      char pathz[25] = {0};
      int i = 0;
@@ -552,8 +548,6 @@ void open_dir(char* buffer, int sock){
 
 void handle_open(char* buffer, int socket){
     
-
-    int valread;
      //char * pathz// = (char*)malloc(sizeof(char) * 100 );
      char pathz[25] = {0};
      int i = 0;
@@ -612,8 +606,6 @@ void handle_open(char* buffer, int socket){
 
 void handle_create(char* buffer , int socket){
 
-    
-    int valread;
      //char * pathz// = (char*)malloc(sizeof(char) * 100 );
      char pathz[25] = {0};
      int i = 0;
@@ -638,21 +630,41 @@ void handle_create(char* buffer , int socket){
      printf("pathz: %s \n",pathz);
 
 
-    //char * pathMessage = "Received path from client";
-       char dummyBuff[25] = {0};
-       dummyBuff[0] = 'g';
-       dummyBuff[1] = '\0';
+    char * pathMessage = "Received path from client";
+    send(socket, pathMessage, strlen(pathMessage), 0);
     
-     send(socket,dummyBuff, 25, 0);
-    //send(socket,pathMessage,strlen(pathMessage),0);
-    
+	 //receive the mode
+	 char receiveMode[50];
+	 read(socket, receiveMode, 50);
 
+	 mode_t mode = (mode_t)atoi(receiveMode);
+	 
+	 int check = creat(pathz, mode);
+    
+    //return file descriptor or -1
+	 char returnBuf[20];
+	 my_itoa(check, returnBuf);
+
+	 if( check < 0) {
+		  printf("Failed to create file %s\n", pathz);  
+		  
+        my_itoa(-1, returnBuf); 
+       
+        send(socket,returnBuf,strlen(returnBuf), 0);
+      
+        char err[20];
+        my_itoa(errno, err);
+        send(socket, err, strlen(err), 0);
+    }
+    else {
+        printf("Created file %s successfully\n", pathz);  
+        send(socket,returnBuf,strlen(returnBuf), 0);
+    }
+	 
 
 }
 
 void handle_truncate(char* buffer , int socket){
-    int valread;
-     //char * pathz// = (char*)malloc(sizeof(char) * 100 );
      char pathz[25] = {0};
      int i = 0;
      while(1){
@@ -712,10 +724,6 @@ void handle_truncate(char* buffer , int socket){
 }
 
 
-
-
-
-
 /*
  * This will handle connection for each client
  * */
@@ -724,14 +732,12 @@ void *connection_handler(void *socket_desc)
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
     int read_size;
-    //char *message , client_message[2000];
-    char* message;
     char client_message[25] = {0};
     
 
    // int valread = read( sock,client_message, 1024); 
 
-    int valread = read( sock,client_message, 25); 
+   read_size = read( sock,client_message, 25); 
 
     char* pathz = (char*)malloc( sizeof(char) * 25);
     memcpy(pathz,path, strlen(path) );

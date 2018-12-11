@@ -497,13 +497,35 @@ static int do_create(const char * path, mode_t mode, struct fuse_file_info * fp)
 
     printf("pathz for do_create: %s\n",pathz); 
     send(sock , pathz , strlen(pathz) , 0 );
+   
+    char buff2[25] = {0};
+    valread2 = read(sock, buff2, 25);
+    printf("%s\n",buff2);
+
+	 //need to send mode
+     printf("Client is sending this mode: %d\n", mode); 
+	 char modeBuf[50];
+	 my_itoa((int)mode, modeBuf);
+	 send(sock, modeBuf, strlen(modeBuf), 0);
 
 
-    //need to send mode
-    printf("Client is sending this mode: %d\n", mode);    
-   char buff2[25] = {0};
-     valread2 = read(sock, buff2, 25);
-     printf("Returned mess from server: %s\n",buff2);
+	 //return the file handle
+     char buff3[20] = {0};
+     valread2 = read(sock, buff3, 20);
+     printf("Returned fd: %s\n",buff3);
+     
+     
+     if( (atoi(buff2)) != -1) {
+        return 0;
+     }
+     else {
+         char receiveErr[20] = {0};
+         valread2 = read(sock,receiveErr, 20);
+         printf("Received errno: %d\n", atoi(receiveErr));
+         return -atoi(receiveErr);
+     }
+
+	
 }
 
 static int do_truncate(const char * path, off_t offset){
@@ -591,9 +613,6 @@ int main( int argc, char *argv[] )
 
 struct sockaddr_in address; 
     
-    
-    
-
 	return fuse_main( argc, argv, &operations, NULL );
 }
 
