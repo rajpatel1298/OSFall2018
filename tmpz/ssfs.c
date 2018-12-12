@@ -649,7 +649,7 @@ static int do_read( const char *path, char *buffer, size_t size, off_t offset, s
 	strcpy(buffer, buffer1);
 	printf("buff: %s\n", buffer);
 	
-	char strBytesRead[2];
+	char strBytesRead[5];
 	read(sock, &strBytesRead,sizeof(strBytesRead));
 	
 	int bytesRead = atoi(strBytesRead);
@@ -715,7 +715,7 @@ static int do_write( const char *path, const char *buffer, size_t size, off_t of
 	send(sock, buffer, strlen(buffer),0);
 	
 	
-	char strBytesRead[2];
+	char strBytesRead[5];
 	read(sock, &strBytesRead,sizeof(strBytesRead));
 	
 	int bytesRead = atoi(strBytesRead);
@@ -769,7 +769,7 @@ static int do_flush (const char * path, struct fuse_file_info * fi){
 	
 	send(sock, path, strlen(path),0);
 	
-	char strRetVal[1];
+	char strRetVal[5];
 	read(sock, &strRetVal,sizeof(strRetVal));
 	
 	int retVal = atoi(strRetVal);
@@ -824,7 +824,7 @@ static int do_release (const char * path, struct fuse_file_info * fi){
 	
 	send(sock, path, strlen(path),0);
 	
-	char strRetVal[1];
+	char strRetVal[5];
 	read(sock, &strRetVal,sizeof(strRetVal));
 	
 	int retVal = atoi(strRetVal);

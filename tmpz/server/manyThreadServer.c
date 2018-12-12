@@ -767,7 +767,7 @@ void handle_read(char * buff, int sock){
 	printf("buffer = %s\n\n", buffer);
 	send(sock, buffer, size, 0);
 	
-	char strBytesRead[2];
+	char strBytesRead[5];
 	my_itoa(bytesread, strBytesRead);
 	
 	printf("stringbyestesrread: %s\n", strBytesRead);
@@ -828,7 +828,7 @@ void handle_write(char * buff, int sock){
 	}
 	
 	
-	char strBytesRead[2];
+	char strBytesRead[5];
 	my_itoa(bytesread, strBytesRead);
 	
 	printf("stringbyestesrwritten: %s\n", strBytesRead);
@@ -882,7 +882,7 @@ void handle_flush(char * buff, int sock){
 		printf("succeeded bish\n");
 	}
 	
-	char strRetVal[1];
+	char strRetVal[5];
 	my_itoa(retVal, strRetVal);
 	
 	printf("strRetVal: %s\n", strRetVal);
@@ -934,7 +934,7 @@ void handle_release(char * buff, int sock){
 		printf("close succeeded bish\n");
 	}
 	
-	char strRetVal[1];
+	char strRetVal[5];
 	my_itoa(retVal, strRetVal);
 	
 	printf("strRetVal: %s\n", strRetVal);
