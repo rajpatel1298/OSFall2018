@@ -724,6 +724,228 @@ void handle_truncate(char* buffer , int socket){
 }
 
 
+void handle_read(char * buff, int sock){
+	
+	char pathz[25] = {0};
+     int i = 0;
+     while(1){
+         pathz[i] = path[i];
+         i++;
+         if ( path[i] == '\0'){break;}
+              }
+     int j = 0;
+
+     while(1){
+         pathz[i] = buff[j];
+         i++;
+         j++;
+         if(buff[j] == '\0'){
+            pathz[i] = '\0';
+            break;}
+     }
+	
+	char * recv_flag  = "Server successfully recieved read_flag\n";
+	send(sock, recv_flag, strlen(recv_flag), 0);
+
+	char path[100];
+	read( sock,&path, 100);
+
+	printf("Server: received path %s\n", pathz);
+	
+	int fd = open(pathz, O_RDONLY);
+	if(fd == -1){
+		printf("errno: %s\n", strerror(errno));
+	}
+
+		
+	size_t size = 50;
+	printf("fd: %d\n", fd);
+	int bytesread;
+	char buffer[100] = {0};
+	bytesread = read(fd, buffer, 50);
+	
+	printf("buffer = %s\n\n", buffer);
+	send(sock, buffer, size, 0);
+	
+	char strBytesRead[2];
+	my_itoa(bytesread, strBytesRead);
+	
+	printf("stringbyestesrread: %s\n", strBytesRead);
+	
+	send(sock, strBytesRead, strlen(strBytesRead), 0);
+	
+	close(fd);
+
+}
+
+
+void handle_write(char * buff, int sock){
+	
+	char pathz[25] = {0};
+     int i = 0;
+     while(1){
+         pathz[i] = path[i];
+         i++;
+         if ( path[i] == '\0'){break;}
+              }
+     int j = 0;
+
+     while(1){
+         pathz[i] = buff[j];
+         i++;
+         j++;
+         if(buff[j] == '\0'){
+            pathz[i] = '\0';
+            break;}
+     }
+	
+	char * recv_flag  = "Server successfully recieved write_flag\n";
+	send(sock, recv_flag, strlen(recv_flag), 0);
+
+	char path[100];
+	read( sock,&path, 100);
+	
+	char buffer[100] = {0};
+	read( sock,&buffer, 100);
+
+	printf("Server: received path %s\n", pathz);
+	printf("Buffer Recieved: %s\n", buffer);
+	
+	
+	
+	int fd = open(pathz, O_WRONLY);
+	if(fd == -1){
+		printf("errno: %s\n", strerror(errno));
+	}
+		
+	printf("fd: %d\n", fd);
+	int bytesread;
+	
+	bytesread = write(fd, buffer, strlen(buffer));
+	printf("bytesread %d\n", bytesread);
+	if(bytesread == -1){
+		printf("errno: %s\n", strerror(errno));
+	}
+	
+	
+	char strBytesRead[2];
+	my_itoa(bytesread, strBytesRead);
+	
+	printf("stringbyestesrwritten: %s\n", strBytesRead);
+	
+	send(sock, strBytesRead, strlen(strBytesRead), 0);
+	
+	close(fd);
+
+}
+
+void handle_flush(char * buff, int sock){
+	
+	char pathz[25] = {0};
+     int i = 0;
+     while(1){
+         pathz[i] = path[i];
+         i++;
+         if ( path[i] == '\0'){break;}
+              }
+     int j = 0;
+
+     while(1){
+         pathz[i] = buff[j];
+         i++;
+         j++;
+         if(buff[j] == '\0'){
+            pathz[i] = '\0';
+            break;}
+     }
+	
+	char * recv_flag  = "Server successfully recieved flush flag\n";
+	send(sock, recv_flag, strlen(recv_flag), 0);
+
+	char path[100];
+	read( sock,&path, 100);
+	
+	printf("Server: received path %s\n", pathz);
+	
+	int fd = open(pathz, O_RDWR);
+	if(fd == -1){
+		printf("errno: %s\n", strerror(errno));
+	}
+		
+	printf("fd: %d\n", fd);
+	
+	int retVal;
+	retVal = fsync(fd);
+	if(retVal != 0){
+		printf("errno: %s\n", strerror(errno));
+	}else{
+		printf("succeeded bish\n");
+	}
+	
+	char strRetVal[1];
+	my_itoa(retVal, strRetVal);
+	
+	printf("strRetVal: %s\n", strRetVal);
+	
+	send(sock, strRetVal, strlen(strRetVal), 0);
+
+}
+
+void handle_release(char * buff, int sock){
+	
+	char pathz[25] = {0};
+     int i = 0;
+     while(1){
+         pathz[i] = path[i];
+         i++;
+         if ( path[i] == '\0'){break;}
+              }
+     int j = 0;
+
+     while(1){
+         pathz[i] = buff[j];
+         i++;
+         j++;
+         if(buff[j] == '\0'){
+            pathz[i] = '\0';
+            break;}
+     }
+	
+	char * recv_flag  = "Server successfully recieved release flag\n";
+	send(sock, recv_flag, strlen(recv_flag), 0);
+
+	char path[100];
+	read( sock,&path, 100);
+	
+	printf("Server: received path %s\n", pathz);
+	
+	int fd = open(pathz, O_RDWR);
+	if(fd == -1){
+		printf("errno: %s\n", strerror(errno));
+	}
+		
+	printf("fd: %d\n", fd);
+	
+	int retVal;
+	retVal = close(fd);
+	if(retVal != 0){
+		printf("errno: %s\n", strerror(errno));
+	}else{
+		printf("close succeeded bish\n");
+	}
+	
+	char strRetVal[1];
+	my_itoa(retVal, strRetVal);
+	
+	printf("strRetVal: %s\n", strRetVal);
+	
+	send(sock, strRetVal, strlen(strRetVal), 0);
+
+}
+
+
+
+
 /*
  * This will handle connection for each client
  * */
@@ -732,12 +954,14 @@ void *connection_handler(void *socket_desc)
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
     int read_size;
+    //char *message , client_message[2000];
+
     char client_message[25] = {0};
     
 
    // int valread = read( sock,client_message, 1024); 
 
-   read_size = read( sock,client_message, 25); 
+    read_size = read( sock,client_message, 25); 
 
     char* pathz = (char*)malloc( sizeof(char) * 25);
     memcpy(pathz,path, strlen(path) );
@@ -786,6 +1010,22 @@ void *connection_handler(void *socket_desc)
          printf("message before cat for truncate: %s\n",client_message);
          handle_truncate(client_message + 2, sock);
           }
+   else if(  (client_message[0] == '2') && (client_message[1] == '3') ){
+         printf("message before cat for read: %s\n",client_message);
+         handle_read(client_message + 2, sock);
+          }
+   else if(  (client_message[0] == '3') && (client_message[1] == '3') ){
+         printf("message before cat for write: %s\n",client_message);
+         handle_write(client_message + 2, sock);
+          }
+   else if(  (client_message[0] == '0') && (client_message[1] == '4') ){
+         printf("message before cat for flush: %s\n",client_message);
+         handle_flush(client_message + 2, sock);
+          }
+   else if(  (client_message[0] == '1') && (client_message[1] == '4') ){
+         printf("message before cat for release: %s\n",client_message);
+         handle_release(client_message + 2, sock);
+          }
 
      //send(sock , "yo from server", 14 , 0 ); 
     
@@ -805,9 +1045,6 @@ void *connection_handler(void *socket_desc)
          
     return 0;
 } 
-
-
-
 
 
 

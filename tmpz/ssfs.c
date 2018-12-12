@@ -595,6 +595,251 @@ static int do_truncate(const char * path, off_t offset){
      }
 }
 
+static int do_read( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi)
+{
+	
+	printf("does do_read\n");
+	printf("entering do_read the og path: %s\n",path);
+   
+   	int valread;
+   	int sock = get_sock();
+
+    char buff[25] = {0}; 
+    //char* pathz = (char*)malloc( sizeof(char) * 25);
+
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   	// strcat(pathz,path);
+    char pathz[25] = {0};
+    //char* functionNum = "00";
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '2';
+    pathz[1] = '3';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){
+       pathz[i] = '\0';
+       break;}
+	}
+
+    printf("pathz for do_read: %s\n",pathz); 
+    send(sock , pathz , strlen(pathz) , 0 );
+	
+	printf("path: %s\n", path);
+
+
+	//char *read_flag = "23";
+	//send(sock, read_flag, strlen(read_flag),0);
+	
+	char recv_flag[1024];
+	read(sock, &recv_flag,sizeof(recv_flag));
+	printf("Client: %s\n",recv_flag);
+	
+	send(sock, path, strlen(path),0);
+	
+	char buffer1[50] = {0};
+	read(sock, &buffer1,sizeof(buffer1));
+	
+	strcpy(buffer, buffer1);
+	printf("buff: %s\n", buffer);
+	
+	char strBytesRead[2];
+	read(sock, &strBytesRead,sizeof(strBytesRead));
+	
+	int bytesRead = atoi(strBytesRead);
+	if(bytesRead == -1){
+		printf("Failed to read from file\n");
+	}else{
+		printf("THIS IS BYTES READ SENT FROM SERVER: %d\n", bytesRead);
+	}
+	return bytesRead;
+}
+
+
+static int do_write( const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi)
+{
+	
+	printf("does do_write\n");
+	
+	
+	printf("entering do_write the og path: %s\n",path);
+   int valread;
+   int sock = get_sock();
+
+    char buff[25] = {0}; 
+    //char* pathz = (char*)malloc( sizeof(char) * 25);
+
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+     char pathz[25] = {0};
+    //char* functionNum = "00";
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '3';
+    pathz[1] = '3';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){
+       pathz[i] = '\0';
+       break;}
+	}
+
+    printf("pathz for do_write: %s\n",pathz); 
+    send(sock , pathz , strlen(pathz) , 0 );
+		
+	printf("path: %s\n", path);
+	printf("buffer %s\n", buffer);
+
+
+	//char *read_flag = "23";
+	//send(sock, read_flag, strlen(read_flag),0);
+	
+	char recv_flag[1024];
+	read(sock, &recv_flag,sizeof(recv_flag));
+	printf("Client: %s\n",recv_flag);
+	
+	send(sock, path, strlen(path),0);
+	
+	send(sock, buffer, strlen(buffer),0);
+	
+	
+	char strBytesRead[2];
+	read(sock, &strBytesRead,sizeof(strBytesRead));
+	
+	int bytesRead = atoi(strBytesRead);
+	if(bytesRead == -1){
+		printf("Failed to write to file\n");
+	}else{
+		printf("THIS IS BYTES WRITTEN SENT FROM SERVER: %d\n", bytesRead);
+	}
+	return bytesRead;
+}
+
+static int do_flush (const char * path, struct fuse_file_info * fi){
+
+	printf("does do_flush\n");
+	
+	
+	printf("entering do_flush the og path: %s\n",path);
+   int valread;
+   int sock = get_sock();
+
+    char buff[25] = {0}; 
+    //char* pathz = (char*)malloc( sizeof(char) * 25);
+
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+     char pathz[25] = {0};
+    //char* functionNum = "00";
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '0';
+    pathz[1] = '4';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){
+       pathz[i] = '\0';
+       break;}
+	}
+
+    printf("pathz for do_flush: %s\n",pathz); 
+    send(sock , pathz , strlen(pathz) , 0 );
+    
+    char recv_flag[1024];
+	read(sock, &recv_flag,sizeof(recv_flag));
+	printf("Client: %s\n",recv_flag);
+	
+	send(sock, path, strlen(path),0);
+	
+	char strRetVal[1];
+	read(sock, &strRetVal,sizeof(strRetVal));
+	
+	int retVal = atoi(strRetVal);
+	if(retVal == 0){
+		printf("Fsync returned 0, success! dood\n");
+	}else{
+		printf("Fsync failed, failure\n");
+	}
+	return retVal;
+
+}
+
+static int do_release (const char * path, struct fuse_file_info * fi){
+
+	printf("does do_release\n");
+	
+	
+	printf("entering do_release the og path: %s\n",path);
+   int valread;
+   int sock = get_sock();
+
+    char buff[25] = {0}; 
+    //char* pathz = (char*)malloc( sizeof(char) * 25);
+
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+     char pathz[25] = {0};
+    //char* functionNum = "00";
+    //memcpy(pathz,functionNum, strlen(functionNum) );
+   // strcat(pathz,path);
+    int i = 2;
+    int j =  0;
+    pathz[0] = '1';
+    pathz[1] = '4';
+
+    while(1){
+      pathz[i] = path[j];
+     
+      i ++;
+      j++;
+      if(path[j] == '\0'){
+       pathz[i] = '\0';
+       break;}
+	}
+
+    printf("pathz for do_release: %s\n",pathz); 
+    send(sock , pathz , strlen(pathz) , 0 );
+    
+    char recv_flag[1024];
+	read(sock, &recv_flag,sizeof(recv_flag));
+	printf("Client: %s\n",recv_flag);
+	
+	send(sock, path, strlen(path),0);
+	
+	char strRetVal[1];
+	read(sock, &strRetVal,sizeof(strRetVal));
+	
+	int retVal = atoi(strRetVal);
+	if(retVal == 0){
+		printf("Close returned 0, success! dood\n");
+	}else{
+		printf("Close failed, failure\n");
+	}
+	return retVal;
+
+}
+
+
+
+
 static struct fuse_operations operations = {
     .getattr	= do_getattr,
     .readdir	= do_readdir,
@@ -603,10 +848,14 @@ static struct fuse_operations operations = {
     .releasedir = do_releasedir,
     .open       = do_open,
     .create     = do_create,
-    .truncate   = do_truncate
-    
-    //.read		= do_read,
+    .truncate   = do_truncate,
+    .read		= do_read,
+    .write		= do_write,
+    .flush		= do_flush,
+    .release	=do_release,
 };
+
+
 
 int main( int argc, char *argv[] )
 {
